@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Streaks — a personal ledger</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2A2B24">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #EDE7D9;
+    --paper-raised: #F5F0E4;
+    --ink: #2A2B24;
+    --ink-soft: #5B5A4E;
+    --moss: #4B6650;
+    --moss-soft: #DCE4D6;
+    --ochre: #B98A3C;
+    --rose: #A34C3F;
+    --line: #C9BFA8;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(42,43,36,0.05) 1px, transparent 0);
+    background-size: 18px 18px;
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 460px;
+    min-height: 100vh;
+    padding: 28px 18px 100px;
+    position: relative;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 28px;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .today {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+
+  /* Empty state */
+  .empty {
+    margin-top: 20vh;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+  .empty .mark {
+    font-family: 'Fraunces', serif;
+    font-size: 52px;
+    color: var(--line);
+    margin-bottom: 6px;
+  }
+  .empty p {
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 260px;
+    margin: 8px auto 20px;
+  }
+
+  /* Habit card */
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 16px 14px;
+    margin-bottom: 14px;
+    position: relative;
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .habit-name {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 19px;
+    margin: 0 0 2px;
+  }
+  .habit-meta {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .streak-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 15px;
+    background: var(--paper);
+    border: 1.5px solid var(--ochre);
+    color: var(--ochre);
+    border-radius: 999px;
+    padding: 5px 12px;
+    transform: rotate(-2deg);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .streak-badge b { font-size: 17px; }
+
+  .menu-btn {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px 6px;
+    line-height: 1;
+  }
+
+  .week-row {
+    display: flex;
+    gap: 6px;
+    margin: 14px 0 12px;
+  }
+  .day-box {
+    flex: 1;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    border: 1.5px dashed var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.1s ease, background 0.15s ease;
+    position: relative;
+  }
+  .day-box.done {
+    background: var(--moss);
+    border: 1.5px solid var(--moss);
+    color: var(--paper-raised);
+  }
+  .day-box.today { border-color: var(--ink); border-style: solid; }
+  .day-box:active { transform: scale(0.9); }
+  .day-box.done::after {
+    content: "✓";
+    font-size: 13px;
+  }
+  .day-box .lbl {
+    position: absolute;
+    bottom: -16px;
+    font-size: 9px;
+    color: var(--ink-soft);
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 18px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+
+  .week-progress {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* FAB */
+  .fab {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(calc(-50% + 190px));
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    font-size: 26px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(42,43,36,0.3);
+  }
+  .fab.centered { transform: translateX(-50%); }
+
+  /* Modal */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(42,43,36,0.4);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10;
+  }
+  .overlay.open { display: flex; }
+  .sheet {
+    background: var(--paper);
+    width: 100%;
+    max-width: 460px;
+    border-radius: 20px 20px 0 0;
+    padding: 22px 20px 28px;
+    animation: slideUp 0.22s ease-out;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .sheet h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 21px;
+    margin: 0 0 18px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 16px 0 6px;
+  }
+  input[type=text], input[type=number], input[type=time] {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--paper-raised);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+  }
+  input:focus { outline: 2px solid var(--moss); outline-offset: 1px; }
+
+  .freq-toggle {
+    display: flex;
+    gap: 8px;
+  }
+  .freq-toggle button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--paper-raised);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .freq-toggle button.active {
+    background: var(--moss);
+    border-color: var(--moss);
+    color: white;
+  }
+
+  .times-row {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .times-row.show { display: flex; }
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--paper-raised);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 14px;
+  }
+  .stepper button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--ink);
+    cursor: pointer;
+    width: 24px;
+  }
+  .stepper span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    min-width: 16px;
+    text-align: center;
+  }
+
+  .reminder-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .switch {
+    width: 42px;
+    height: 24px;
+    background: var(--line);
+    border-radius: 999px;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+  }
+  .switch.on { background: var(--moss); }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 20px; height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.15s ease;
+  }
+  .switch.on::after { transform: translateX(18px); }
+
+  .sheet-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .btn {
+    flex: 1;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-primary { background: var(--ink); color: var(--paper); }
+  .btn-ghost { background: transparent; color: var(--ink-soft); border: 1.5px solid var(--line); }
+  .btn-danger { background: var(--rose); color: white; }
+
+  .kebab-menu {
+    position: absolute;
+    top: 44px;
+    right: 14px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 5;
+    min-width: 120px;
+  }
+  .kebab-menu.open { display: flex; }
+  .kebab-menu button {
+    background: none;
+    border: none;
+    padding: 11px 14px;
+    text-align: left;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .kebab-menu button.danger { color: var(--rose); }
+  .kebab-menu button:hover { background: var(--paper); }
+
+  .banner {
+    background: var(--moss-soft);
+    border: 1px solid var(--moss);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--moss);
+    margin-bottom: 16px;
+    display: none;
+  }
+  .banner.show { display: block; }
+
+  .nav-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .nav-btn {
+    background: none;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .nav-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+  /* Sub-pages: calendar view + notes view */
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 0;
+    font-family: 'Inter', sans-serif;
+  }
+  .detail-header h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 21px;
+    margin: 0;
+  }
+  .stat-chip {
+    flex: 1;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-chip b {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 21px;
+    color: var(--ink);
+  }
+  .stat-chip span {
+    font-size: 10px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* Shared paginator (month nav / week nav) */
+  .paginator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .paginator span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .nav-arrow {
+    background: none;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .nav-arrow:disabled { opacity: 0.3; cursor: default; }
+
+  /* Month grid (calendar view) */
+  .month-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .month-weekdays span {
+    text-align: center;
+    font-size: 10px;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .month-cell {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    border: 1.5px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--paper);
+  }
+  .month-cell.blank { border: none; background: none; }
+  .month-cell.future { border-style: dashed; color: var(--line); }
+  .month-cell.today { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+  .month-cell.level-1 { background: #CFE0C9; border-color: #CFE0C9; color: var(--ink); }
+  .month-cell.level-2 { background: #9CBB94; border-color: #9CBB94; color: white; }
+  .month-cell.level-3 { background: #6E9868; border-color: #6E9868; color: white; }
+  .month-cell.level-4 { background: var(--moss); border-color: var(--moss); color: white; }
+
+  .heatmap-hint {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 16px;
+    text-align: center;
+  }
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 14px;
+    font-size: 10px;
+    color: var(--ink-soft);
+  }
+  .legend-swatch {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    border: 1.5px solid var(--line);
+    background: var(--paper);
+  }
+  .legend-swatch.level-1 { background: #CFE0C9; border-color: #CFE0C9; }
+  .legend-swatch.level-2 { background: #9CBB94; border-color: #9CBB94; }
+  .legend-swatch.level-3 { background: #6E9868; border-color: #6E9868; }
+  .legend-swatch.level-4 { background: var(--moss); border-color: var(--moss); }
+
+  /* Notes view */
+  .note-icon {
+    flex: 1;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    border: 1.5px dashed var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    position: relative;
+  }
+  .note-icon.filled {
+    background: var(--ochre);
+    border: 1.5px solid var(--ochre);
+    color: white;
+  }
+  .note-icon.today { border-color: var(--ink); border-style: solid; }
+  .note-icon .lbl {
+    position: absolute;
+    bottom: -16px;
+    font-size: 9px;
+    color: var(--ink-soft);
+  }
+
+  textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--paper-raised);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    resize: vertical;
+  }
+  textarea:focus { outline: 2px solid var(--moss); outline-offset: 1px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="mainView">
+  <header>
+    <div>
+      <h1>Streaks</h1>
+      <div class="nav-row">
+        <button class="nav-btn" onclick="openCalendarView()">📅 Calendar view</button>
+        <button class="nav-btn" onclick="openNotesView()">📝 Notes</button>
+        <button class="nav-btn" onclick="openBackupView()">💾 Backup</button>
+      </div>
+    </div>
+    <div class="today" id="todayLabel"></div>
+  </header>
+
+  <div class="banner" id="reminderBanner"></div>
+
+  <div id="emptyState" class="empty" style="display:none;">
+    <div class="mark">·</div>
+    <p>No habits yet. Start a ledger entry for something you want to keep showing up for.</p>
+    <button class="btn btn-primary" style="width:auto;padding:12px 22px;" onclick="openAddSheet()">+ Add a habit</button>
+  </div>
+
+  <div id="habitList"></div>
+
+  <button class="fab" id="fabBtn" onclick="openAddSheet()">+</button>
+  </div>
+
+  <div id="calendarView" style="display:none;">
+    <div class="detail-header">
+      <button class="back-btn" onclick="closeSubView()">← Back</button>
+      <h2>Calendar view</h2>
+    </div>
+    <p class="heatmap-hint" style="margin-top:0;margin-bottom:16px;">Darker days mean more of your habits got done.</p>
+    <div class="paginator">
+      <button class="nav-arrow" onclick="shiftCalendarMonth(-1)">‹</button>
+      <span id="calMonthLabel"></span>
+      <button class="nav-arrow" id="calNextBtn" onclick="shiftCalendarMonth(1)">›</button>
+    </div>
+    <div class="month-weekdays">
+      <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+    </div>
+    <div class="month-grid" id="monthGrid"></div>
+    <div class="legend-row">
+      <span>Less</span>
+      <div class="legend-swatch level-0"></div>
+      <div class="legend-swatch level-1"></div>
+      <div class="legend-swatch level-2"></div>
+      <div class="legend-swatch level-3"></div>
+      <div class="legend-swatch level-4"></div>
+      <span>More</span>
+    </div>
+  </div>
+
+  <div id="notesView" style="display:none;">
+    <div class="detail-header">
+      <button class="back-btn" onclick="closeSubView()">← Back</button>
+      <h2>Notes</h2>
+    </div>
+    <div class="paginator">
+      <button class="nav-arrow" onclick="shiftNotesWeek(1)">‹</button>
+      <span id="notesWeekLabel"></span>
+      <button class="nav-arrow" id="notesNextBtn" onclick="shiftNotesWeek(-1)">›</button>
+    </div>
+    <div id="notesHabitList"></div>
+  </div>
+
+  <div id="backupView" style="display:none;">
+    <div class="detail-header">
+      <button class="back-btn" onclick="closeSubView()">← Back</button>
+      <h2>Backup</h2>
+    </div>
+    <p style="font-size:13px;color:var(--ink-soft);line-height:1.7;margin-bottom:22px;">
+      Your data lives only in this browser. Export a backup file now and then — especially before switching phones, clearing browser data, or reinstalling.
+    </p>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:12px;" onclick="exportBackup()">⬇ Export backup</button>
+    <button class="btn btn-ghost" style="width:100%;" onclick="document.getElementById('importFile').click()">⬆ Import backup</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importBackup(event)">
+    <p id="lastBackupLabel" style="font-size:11px;color:var(--ink-soft);text-align:center;margin-top:18px;"></p>
+  </div>
+</div>
+
+<!-- Add / Edit sheet -->
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <h2 id="sheetTitle">New habit</h2>
+
+    <label>Name</label>
+    <input type="text" id="habitName" placeholder="e.g. Stretch, Read, No sugar" maxlength="40">
+
+    <label>Frequency</label>
+    <div class="freq-toggle">
+      <button type="button" id="freqDaily" onclick="setFreq('daily')">Every day</button>
+      <button type="button" id="freqWeekly" onclick="setFreq('weekly')">X times a week</button>
+    </div>
+    <div class="times-row" id="timesRow">
+      <span style="font-size:13px;color:var(--ink-soft);">Target</span>
+      <div class="stepper">
+        <button type="button" onclick="stepTimes(-1)">−</button>
+        <span id="timesValue">3</span>
+        <button type="button" onclick="stepTimes(1)">+</button>
+      </div>
+      <span style="font-size:13px;color:var(--ink-soft);">per week</span>
+    </div>
+
+    <label>Reminder</label>
+    <div class="reminder-toggle">
+      <input type="time" id="reminderTime" value="09:00" style="width:auto;flex:1;margin-right:10px;">
+      <div class="switch" id="reminderSwitch" onclick="toggleReminder()"></div>
+    </div>
+
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" onclick="closeSheet()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveHabit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm -->
+<div class="overlay" id="deleteOverlay">
+  <div class="sheet">
+    <h2>Delete this habit?</h2>
+    <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;">This removes <b id="deleteHabitName"></b> and its entire history. This can't be undone.</p>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" onclick="closeDeleteOverlay()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Day note sheet -->
+<div class="overlay" id="noteOverlay">
+  <div class="sheet">
+    <h2 id="noteDateLabel">Date</h2>
+    <div class="reminder-toggle" style="margin-bottom:6px;">
+      <span style="font-size:13px;color:var(--ink-soft);">Completed this day</span>
+      <div class="switch" id="noteDoneSwitch" onclick="toggleNoteDone()"></div>
+    </div>
+    <label>Note</label>
+    <textarea id="noteText" rows="4" placeholder="What happened, how it went..." maxlength="500"></textarea>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" onclick="closeNoteSheet()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNote()">Save</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+const STORAGE_KEY = 'streak_tracker_habits_v1';
+let habits = [];
+let editingId = null;
+let currentFreq = 'daily';
+let currentTimes = 3;
+let reminderOn = false;
+let deleteTargetId = null;
+let openMenuId = null;
+let activeView = 'main';
+let noteEditHabitId = null;
+let noteEditDate = null;
+let noteEditDone = false;
+let calYear, calMonth;
+let notesWeekOffset = 0;
+
+function todayStr(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return todayStr(d);
+}
+function getWeekStart(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = (d.getDay() + 6) % 7; // Monday = 0
+  d.setDate(d.getDate() - day);
+  return todayStr(d);
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    habits = raw ? JSON.parse(raw) : [];
+    habits.forEach(h => {
+      if (!Array.isArray(h.checkins)) h.checkins = [];
+      if (!h.notes || typeof h.notes !== 'object') h.notes = {};
+      // migrate from the previous {date, note} object format
+      if (h.checkins.length && typeof h.checkins[0] === 'object') {
+        const dates = [];
+        const migratedNotes = {};
+        h.checkins.forEach(c => {
+          dates.push(c.date);
+          if (c.note && c.note.trim()) migratedNotes[c.date] = c.note;
+        });
+        h.checkins = dates;
+        h.notes = { ...migratedNotes, ...h.notes };
+      }
+    });
+  } catch(e) {
+    console.error('Load failed', e);
+    habits = [];
+  }
+}
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
+  } catch(e) {
+    console.error('Save failed', e);
+    alert('Could not save — your browser storage may be full or blocked.');
+  }
+}
+
+function getNote(habit, date) { return habit.notes[date] || ''; }
+function setNote(habit, date, text) {
+  if (text && text.trim()) habit.notes[date] = text.trim();
+  else delete habit.notes[date];
+}
+function refreshAll() {
+  render();
+  if (activeView === 'calendar') renderMonthGrid();
+  if (activeView === 'notes') renderNotesList();
+}
+
+// ---- Streak computation ----
+function computeDailyStreak(checkins) {
+  const set = new Set(checkins);
+  const today = todayStr();
+  const yesterday = addDays(today, -1);
+  let anchor = set.has(today) ? today : (set.has(yesterday) ? yesterday : null);
+  if (!anchor) return 0;
+  let count = 0;
+  let cursor = anchor;
+  while (set.has(cursor)) {
+    count++;
+    cursor = addDays(cursor, -1);
+  }
+  return count;
+}
+function computeDailyLongest(checkins) {
+  const sorted = [...checkins].sort();
+  let longest = 0, run = 0, prev = null;
+  for (const d of sorted) {
+    if (prev && addDays(prev, 1) === d) run++; else run = 1;
+    longest = Math.max(longest, run);
+    prev = d;
+  }
+  return longest;
+}
+function computeWeeklyStreak(checkins, target) {
+  const byWeek = {};
+  checkins.forEach(d => {
+    const w = getWeekStart(d);
+    byWeek[w] = (byWeek[w] || 0) + 1;
+  });
+  const today = todayStr();
+  let cursorWeek = getWeekStart(today);
+  // current week in progress doesn't break the streak if not yet met
+  if ((byWeek[cursorWeek] || 0) < target) {
+    cursorWeek = addDays(cursorWeek, -7);
+  }
+  let count = 0;
+  while ((byWeek[cursorWeek] || 0) >= target) {
+    count++;
+    cursorWeek = addDays(cursorWeek, -7);
+  }
+  return count;
+}
+function computeWeeklyLongest(checkins, target) {
+  const byWeek = {};
+  checkins.forEach(d => {
+    const w = getWeekStart(d);
+    byWeek[w] = (byWeek[w] || 0) + 1;
+  });
+  const weeks = Object.keys(byWeek).sort();
+  if (weeks.length === 0) return 0;
+  let longest = 0, run = 0, prev = null;
+  for (const w of weeks) {
+    if (byWeek[w] < target) { run = 0; prev = null; continue; }
+    if (prev && addDays(prev, 7) === w) run++; else run = 1;
+    longest = Math.max(longest, run);
+    prev = w;
+  }
+  return longest;
+}
+
+function getStats(habit) {
+  const uniqueCheckins = [...new Set(habit.checkins)];
+  if (habit.frequencyType === 'daily') {
+    return {
+      current: computeDailyStreak(uniqueCheckins),
+      longest: computeDailyLongest(uniqueCheckins)
+    };
+  } else {
+    return {
+      current: computeWeeklyStreak(uniqueCheckins, habit.timesPerWeek),
+      longest: computeWeeklyLongest(uniqueCheckins, habit.timesPerWeek)
+    };
+  }
+}
+
+// ---- Rendering ----
+function render() {
+  document.getElementById('todayLabel').textContent = new Date().toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+  const list = document.getElementById('habitList');
+  const empty = document.getElementById('emptyState');
+  const fab = document.getElementById('fabBtn');
+
+  if (habits.length === 0) {
+    empty.style.display = 'block';
+    fab.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+  fab.style.display = 'block';
+
+  const today = todayStr();
+  list.innerHTML = habits.map(h => {
+    const stats = getStats(h);
+    const checkSet = new Set(h.checkins);
+    let dayBoxes = '';
+    for (let i = 6; i >= 0; i--) {
+      const d = addDays(today, -i);
+      const dObj = new Date(d + 'T00:00:00');
+      const label = dObj.toLocaleDateString(undefined, { weekday: 'narrow' });
+      const isToday = d === today;
+      const done = checkSet.has(d);
+      dayBoxes += `<div class="day-box ${done ? 'done' : ''} ${isToday ? 'today' : ''}" onclick="toggleCheckin('${h.id}','${d}')"><span class="lbl">${label}</span></div>`;
+    }
+
+    const freqLabel = h.frequencyType === 'daily' ? 'Every day' : `${h.timesPerWeek}× per week`;
+    const footerParts = [];
+    if (h.frequencyType === 'weekly') {
+      const weekStart = getWeekStart(today);
+      const thisWeekCount = h.checkins.filter(d => getWeekStart(d) === weekStart).length;
+      footerParts.push(`<span class="week-progress">${thisWeekCount}/${h.timesPerWeek} this week</span>`);
+    }
+    if (h.reminderOn) {
+      footerParts.push(`<span>⏰ ${h.reminderTime}</span>`);
+    }
+    const footerRight = footerParts.join(' &nbsp;·&nbsp; ');
+
+    return `
+      <div class="card">
+        <div class="card-top">
+          <div>
+            <p class="habit-name">${escapeHtml(h.name)}</p>
+            <p class="habit-meta">${freqLabel}</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="streak-badge"><b>${stats.current}</b> ${h.frequencyType === 'daily' ? (stats.current===1?'day':'days') : (stats.current===1?'week':'weeks')}</div>
+            <button class="menu-btn" onclick="toggleMenu(event,'${h.id}')">⋮</button>
+          </div>
+        </div>
+        <div class="kebab-menu ${openMenuId === h.id ? 'open' : ''}" id="menu-${h.id}">
+          <button onclick="openEditSheet('${h.id}')">Edit</button>
+          <button class="danger" onclick="openDeleteOverlay('${h.id}')">Delete</button>
+        </div>
+        <div class="week-row">${dayBoxes}</div>
+        <div class="card-footer">
+          <span>Best: ${stats.longest} ${h.frequencyType === 'daily' ? (stats.longest===1?'day':'days') : (stats.longest===1?'week':'weeks')}</span>
+          ${footerRight}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+// ---- Check-in ----
+function toggleCheckin(habitId, dateStr) {
+  const h = habits.find(x => x.id === habitId);
+  if (!h) return;
+  const idx = h.checkins.indexOf(dateStr);
+  if (idx >= 0) h.checkins.splice(idx, 1);
+  else h.checkins.push(dateStr);
+  save();
+  refreshAll();
+}
+
+// ---- Menu ----
+function toggleMenu(e, id) {
+  e.stopPropagation();
+  openMenuId = openMenuId === id ? null : id;
+  render();
+}
+document.addEventListener('click', () => {
+  if (openMenuId) { openMenuId = null; render(); }
+});
+
+// ---- Add / Edit sheet ----
+function openAddSheet() {
+  editingId = null;
+  document.getElementById('sheetTitle').textContent = 'New habit';
+  document.getElementById('habitName').value = '';
+  setFreq('daily');
+  currentTimes = 3;
+  document.getElementById('timesValue').textContent = currentTimes;
+  document.getElementById('reminderTime').value = '09:00';
+  reminderOn = false;
+  document.getElementById('reminderSwitch').classList.remove('on');
+  document.getElementById('overlay').classList.add('open');
+}
+function openEditSheet(id) {
+  const h = habits.find(x => x.id === id);
+  if (!h) return;
+  editingId = id;
+  document.getElementById('sheetTitle').textContent = 'Edit habit';
+  document.getElementById('habitName').value = h.name;
+  setFreq(h.frequencyType);
+  currentTimes = h.timesPerWeek || 3;
+  document.getElementById('timesValue').textContent = currentTimes;
+  document.getElementById('reminderTime').value = h.reminderTime || '09:00';
+  reminderOn = !!h.reminderOn;
+  document.getElementById('reminderSwitch').classList.toggle('on', reminderOn);
+  openMenuId = null;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSheet() {
+  document.getElementById('overlay').classList.remove('open');
+}
+function setFreq(type) {
+  currentFreq = type;
+  document.getElementById('freqDaily').classList.toggle('active', type === 'daily');
+  document.getElementById('freqWeekly').classList.toggle('active', type === 'weekly');
+  document.getElementById('timesRow').classList.toggle('show', type === 'weekly');
+}
+function stepTimes(delta) {
+  currentTimes = Math.min(7, Math.max(1, currentTimes + delta));
+  document.getElementById('timesValue').textContent = currentTimes;
+}
+function toggleReminder() {
+  reminderOn = !reminderOn;
+  document.getElementById('reminderSwitch').classList.toggle('on', reminderOn);
+  if (reminderOn && 'Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+function saveHabit() {
+  const name = document.getElementById('habitName').value.trim();
+  if (!name) { alert('Give the habit a name first.'); return; }
+  const reminderTime = document.getElementById('reminderTime').value;
+
+  if (editingId) {
+    const h = habits.find(x => x.id === editingId);
+    h.name = name;
+    h.frequencyType = currentFreq;
+    h.timesPerWeek = currentFreq === 'weekly' ? currentTimes : null;
+    h.reminderOn = reminderOn;
+    h.reminderTime = reminderTime;
+  } else {
+    habits.push({
+      id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      name,
+      frequencyType: currentFreq,
+      timesPerWeek: currentFreq === 'weekly' ? currentTimes : null,
+      reminderOn,
+      reminderTime,
+      createdAt: Date.now(),
+      checkins: [],
+      notes: {}
+    });
+  }
+  save();
+  closeSheet();
+  refreshAll();
+  scheduleReminders();
+}
+
+// ---- Delete ----
+function openDeleteOverlay(id) {
+  deleteTargetId = id;
+  const h = habits.find(x => x.id === id);
+  document.getElementById('deleteHabitName').textContent = h ? h.name : '';
+  openMenuId = null;
+  document.getElementById('deleteOverlay').classList.add('open');
+}
+function closeDeleteOverlay() {
+  document.getElementById('deleteOverlay').classList.remove('open');
+  deleteTargetId = null;
+}
+function confirmDelete() {
+  habits = habits.filter(x => x.id !== deleteTargetId);
+  save();
+  closeDeleteOverlay();
+  refreshAll();
+}
+
+// ---- Calendar view (aggregate heatmap across all habits, one month at a time) ----
+function openCalendarView() {
+  activeView = 'calendar';
+  openMenuId = null;
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  document.getElementById('mainView').style.display = 'none';
+  document.getElementById('calendarView').style.display = 'block';
+  renderMonthGrid();
+  window.scrollTo(0, 0);
+}
+function closeSubView() {
+  activeView = 'main';
+  document.getElementById('calendarView').style.display = 'none';
+  document.getElementById('notesView').style.display = 'none';
+  document.getElementById('backupView').style.display = 'none';
+  document.getElementById('mainView').style.display = 'block';
+  render();
+}
+function shiftCalendarMonth(delta) {
+  calMonth += delta;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderMonthGrid();
+}
+function renderMonthGrid() {
+  const now = new Date();
+  const isCurrentMonth = calYear === now.getFullYear() && calMonth === now.getMonth();
+  document.getElementById('calNextBtn').disabled = isCurrentMonth;
+
+  const monthName = new Date(calYear, calMonth, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  document.getElementById('calMonthLabel').textContent = monthName;
+  document.getElementById('monthGrid').innerHTML = buildMonthGrid(calYear, calMonth);
+}
+function buildMonthGrid(year, month) {
+  const today = todayStr();
+  const total = habits.length;
+  const firstOfMonth = new Date(year, month, 1);
+  const leadingBlanks = (firstOfMonth.getDay() + 6) % 7; // Monday-first
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  let cellsHtml = '';
+  for (let i = 0; i < leadingBlanks; i++) {
+    cellsHtml += `<div class="month-cell blank"></div>`;
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    const m = String(month + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    const date = `${year}-${m}-${d}`;
+    const isToday = date === today;
+
+    if (date > today) {
+      cellsHtml += `<div class="month-cell future ${isToday?'today':''}">${day}</div>`;
+      continue;
+    }
+    let level = 0;
+    if (total > 0) {
+      const doneCount = habits.filter(h => h.checkins.includes(date)).length;
+      const ratio = doneCount / total;
+      level = ratio === 0 ? 0 : ratio < 0.34 ? 1 : ratio < 0.67 ? 2 : ratio < 1 ? 3 : 4;
+    }
+    cellsHtml += `<div class="month-cell level-${level} ${isToday?'today':''}">${day}</div>`;
+  }
+  return cellsHtml;
+}
+
+// ---- Notes view (per-habit note icons, paginated by week, independent of streak status) ----
+function openNotesView() {
+  activeView = 'notes';
+  openMenuId = null;
+  notesWeekOffset = 0;
+  document.getElementById('mainView').style.display = 'none';
+  document.getElementById('notesView').style.display = 'block';
+  renderNotesList();
+  window.scrollTo(0, 0);
+}
+function shiftNotesWeek(direction) {
+  notesWeekOffset = Math.max(0, notesWeekOffset + direction);
+  renderNotesList();
+}
+function getNotesWindowDates() {
+  const today = todayStr();
+  const endDate = addDays(today, -7 * notesWeekOffset);
+  const dates = [];
+  for (let i = 6; i >= 0; i--) dates.push(addDays(endDate, -i));
+  return dates;
+}
+function renderNotesList() {
+  const dates = getNotesWindowDates();
+  document.getElementById('notesNextBtn').disabled = notesWeekOffset === 0;
+  const label = notesWeekOffset === 0
+    ? 'This week'
+    : `${new Date(dates[0]+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})} – ${new Date(dates[6]+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})}`;
+  document.getElementById('notesWeekLabel').textContent = label;
+
+  const container = document.getElementById('notesHabitList');
+  if (habits.length === 0) {
+    container.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;text-align:center;margin-top:40px;">Add a habit first, then come back here to jot notes on any day.</p>`;
+    return;
+  }
+  container.innerHTML = habits.map(h => {
+    let iconsHtml = '';
+    dates.forEach(d => {
+      const dObj = new Date(d + 'T00:00:00');
+      const label = dObj.toLocaleDateString(undefined, { weekday: 'narrow' });
+      const isToday = d === todayStr();
+      const hasNote = !!getNote(h, d);
+      iconsHtml += `<div class="note-icon ${hasNote?'filled':''} ${isToday?'today':''}" onclick="openDayNote('${h.id}','${d}')" title="${d}"><span class="lbl">${label}</span>${hasNote?'✎':''}</div>`;
+    });
+    const freqLabel = h.frequencyType === 'daily' ? 'Every day' : `${h.timesPerWeek}× per week`;
+    return `
+      <div class="card">
+        <p class="habit-name">${escapeHtml(h.name)}</p>
+        <p class="habit-meta">${freqLabel}</p>
+        <div class="week-row" style="margin-top:14px;">${iconsHtml}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ---- Backup view (export/import a JSON snapshot of everything) ----
+function openBackupView() {
+  activeView = 'backup';
+  openMenuId = null;
+  document.getElementById('mainView').style.display = 'none';
+  document.getElementById('backupView').style.display = 'block';
+  renderBackupInfo();
+  window.scrollTo(0, 0);
+}
+function renderBackupInfo() {
+  const last = localStorage.getItem('streak_tracker_last_backup');
+  document.getElementById('lastBackupLabel').textContent = last
+    ? `Last backup: ${new Date(Number(last)).toLocaleString()}`
+    : 'No backup taken yet.';
+}
+function exportBackup() {
+  const data = localStorage.getItem(STORAGE_KEY) || '[]';
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `streaks-backup-${todayStr()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  localStorage.setItem('streak_tracker_last_backup', String(Date.now()));
+  renderBackupInfo();
+}
+function importBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!Array.isArray(parsed)) throw new Error('not an array');
+      if (!confirm('This replaces all current habits and history with this backup file. Continue?')) {
+        event.target.value = '';
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+      load();
+      refreshAll();
+      renderBackupInfo();
+      alert('Backup restored.');
+    } catch (e) {
+      alert('That file could not be read as a valid Streaks backup.');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ---- Day note sheet (works for any day, done or not) ----
+function openDayNote(habitId, dateStr) {
+  const h = habits.find(x => x.id === habitId);
+  if (!h) return;
+  noteEditHabitId = habitId;
+  noteEditDate = dateStr;
+  noteEditDone = h.checkins.includes(dateStr);
+  const label = new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  document.getElementById('noteDateLabel').textContent = `${label} · ${h.name}`;
+  document.getElementById('noteDoneSwitch').classList.toggle('on', noteEditDone);
+  document.getElementById('noteText').value = getNote(h, dateStr);
+  document.getElementById('noteOverlay').classList.add('open');
+}
+function toggleNoteDone() {
+  noteEditDone = !noteEditDone;
+  document.getElementById('noteDoneSwitch').classList.toggle('on', noteEditDone);
+}
+function closeNoteSheet() {
+  document.getElementById('noteOverlay').classList.remove('open');
+  noteEditHabitId = null;
+  noteEditDate = null;
+}
+function saveNote() {
+  const h = habits.find(x => x.id === noteEditHabitId);
+  if (!h || !noteEditDate) return;
+  const text = document.getElementById('noteText').value;
+  setNote(h, noteEditDate, text);
+  const idx = h.checkins.indexOf(noteEditDate);
+  if (noteEditDone && idx < 0) h.checkins.push(noteEditDate);
+  if (!noteEditDone && idx >= 0) h.checkins.splice(idx, 1);
+  save();
+  closeNoteSheet();
+  refreshAll();
+}
+
+// ---- Soft in-app reminders (fire while this tab/app is open or recently backgrounded) ----
+let reminderTimeouts = [];
+function showAppNotification(title, body) {
+  if (Notification.permission !== 'granted') return;
+  if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.showNotification(title, { body, icon: 'icon-192.png', badge: 'icon-192.png' });
+    }).catch(() => {
+      // no active service worker (e.g. running from a local file) — fall back
+      try { new Notification(title, { body, icon: 'icon-192.png' }); } catch (e) { /* ignore */ }
+    });
+  } else {
+    try { new Notification(title, { body, icon: 'icon-192.png' }); } catch (e) { /* ignore */ }
+  }
+}
+function scheduleReminders() {
+  reminderTimeouts.forEach(t => clearTimeout(t));
+  reminderTimeouts = [];
+  if (!('Notification' in window)) return;
+  const today = todayStr();
+  habits.forEach(h => {
+    if (!h.reminderOn || !h.reminderTime) return;
+    if (h.checkins.includes(today)) return;
+    const [hh, mm] = h.reminderTime.split(':').map(Number);
+    const now = new Date();
+    const target = new Date();
+    target.setHours(hh, mm, 0, 0);
+    const ms = target - now;
+    if (ms > 0 && ms < 24 * 60 * 60 * 1000) {
+      const t = setTimeout(() => {
+        showAppNotification('Streaks', `Time for: ${h.name}`);
+      }, ms);
+      reminderTimeouts.push(t);
+    }
+  });
+}
+
+function checkOverdueBanner() {
+  const today = todayStr();
+  const now = new Date();
+  const overdue = habits.filter(h => {
+    if (!h.reminderOn || h.checkins.includes(today)) return false;
+    const [hh, mm] = h.reminderTime.split(':').map(Number);
+    const target = new Date();
+    target.setHours(hh, mm, 0, 0);
+    return now > target;
+  });
+  const banner = document.getElementById('reminderBanner');
+  if (overdue.length > 0) {
+    banner.textContent = `Still open today: ${overdue.map(h => h.name).join(', ')}`;
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// ---- Init ----
+load();
+render();
+scheduleReminders();
+checkOverdueBanner();
+setInterval(checkOverdueBanner, 60000);
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {
+      // fails silently when opened as a local file:// page — expected, only works when hosted over https
+    });
+  });
+}
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persist().catch(() => {});
+}
+</script>
+</body>
+</html>
