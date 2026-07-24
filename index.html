@@ -20,6 +20,7 @@
     --moss-soft: #DCE4D6;
     --ochre: #B98A3C;
     --rose: #A34C3F;
+    --frost: #7C9CB8;
     --line: #C9BFA8;
     --radius: 14px;
   }
@@ -47,14 +48,23 @@
     width: 100%;
     max-width: 460px;
     min-height: 100vh;
-    padding: 28px 18px 100px;
+    padding: max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-left)) calc(100px + env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-right));
     position: relative;
+  }
+
+  @media (max-width: 360px) {
+    .app { padding-left: 12px; padding-right: 12px; }
+    .card { padding: 13px 12px 11px; }
+    .habit-name { font-size: 17px; }
+    .day-box .lbl, .note-icon .lbl { font-size: 8px; }
   }
 
   header {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-start;
     justify-content: space-between;
+    gap: 6px 12px;
     margin-bottom: 22px;
     padding-bottom: 14px;
     border-bottom: 1px solid var(--line);
@@ -63,7 +73,7 @@
   h1 {
     font-family: 'Fraunces', serif;
     font-weight: 700;
-    font-size: 28px;
+    font-size: clamp(22px, 7vw, 28px);
     margin: 0;
     letter-spacing: -0.02em;
   }
@@ -173,6 +183,14 @@
   }
   .day-box.today { border-color: var(--ink); border-style: solid; }
   .day-box.future { cursor: default; opacity: 0.4; }
+  .day-box.offday { opacity: 0.35; border-style: dotted; }
+  .day-box.offday.done { opacity: 0.85; }
+  .day-box.frozen {
+    background: var(--frost);
+    border: 1.5px solid var(--frost);
+    color: white;
+  }
+  .day-box.frozen::after { content: "❄"; font-size: 11px; }
   .day-box:active { transform: scale(0.9); }
   .day-box.done::after {
     content: "✓";
@@ -200,10 +218,24 @@
     font-family: 'IBM Plex Mono', monospace;
   }
 
+  .card-notes-hint {
+    font-size: 10px;
+    color: var(--ink-soft);
+    opacity: 0.6;
+    text-align: right;
+    margin: 6px 0 0;
+  }
+
+  .highlight-flash { animation: flashHighlight 1.2s ease-out; }
+  @keyframes flashHighlight {
+    0% { box-shadow: 0 0 0 3px var(--ochre); }
+    100% { box-shadow: 0 0 0 0px transparent; }
+  }
+
   /* FAB */
   .fab {
     position: fixed;
-    bottom: 28px;
+    bottom: calc(28px + env(safe-area-inset-bottom));
     right: max(18px, calc(50vw - 230px + 18px));
     background: var(--ink);
     color: var(--paper);
@@ -232,7 +264,9 @@
     width: 100%;
     max-width: 460px;
     border-radius: 20px 20px 0 0;
-    padding: 22px 20px 28px;
+    padding: 22px 20px calc(28px + env(safe-area-inset-bottom));
+    max-height: 88vh;
+    overflow-y: auto;
     animation: slideUp 0.22s ease-out;
   }
   @keyframes slideUp {
@@ -289,33 +323,38 @@
 
   .times-row {
     display: none;
-    align-items: center;
+    flex-direction: column;
     gap: 10px;
     margin-top: 10px;
   }
   .times-row.show { display: flex; }
-  .stepper {
+  .days-picker {
+    display: flex;
+    gap: 6px;
+  }
+  .day-chip {
+    flex: 1;
+    aspect-ratio: 1;
+    border-radius: 9px;
+    border: 1.5px solid var(--line);
+    background: var(--paper-raised);
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: var(--paper-raised);
-    border: 1.5px solid var(--line);
-    border-radius: 10px;
-    padding: 8px 14px;
-  }
-  .stepper button {
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: var(--ink);
-    cursor: pointer;
-    width: 24px;
-  }
-  .stepper span {
+    justify-content: center;
     font-family: 'IBM Plex Mono', monospace;
     font-weight: 600;
-    min-width: 16px;
-    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .day-chip.active {
+    background: var(--moss);
+    border-color: var(--moss);
+    color: white;
+  }
+  .days-picker-summary {
+    font-size: 12px;
+    color: var(--ink-soft);
   }
 
   .reminder-toggle {
@@ -426,8 +465,9 @@
   /* Sub-pages: calendar view + notes view */
   .detail-header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
+    gap: 8px 12px;
     margin-bottom: 20px;
     padding-bottom: 14px;
     border-bottom: 1px solid var(--line);
@@ -558,6 +598,62 @@
   .legend-swatch.level-3 { background: #6E9868; border-color: #6E9868; }
   .legend-swatch.level-4 { background: var(--moss); border-color: var(--moss); }
 
+  /* Search */
+  .icon-btn {
+    background: none;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  .search-input-row {
+    margin-bottom: 18px;
+  }
+  .search-result-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+  }
+  .search-result-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .search-result-habit {
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .search-result-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .search-result-snippet {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .search-result-snippet mark {
+    background: var(--moss-soft);
+    color: var(--ink);
+    border-radius: 3px;
+    padding: 0 2px;
+  }
+
   /* Notes view */
   .note-icon {
     flex: 1;
@@ -579,6 +675,7 @@
   }
   .note-icon.today { border-color: var(--ink); border-style: solid; }
   .note-icon.future { cursor: default; opacity: 0.4; }
+  .note-icon.offday { cursor: default; opacity: 0.25; border-style: dotted; }
   .note-icon .lbl {
     position: absolute;
     bottom: -16px;
@@ -633,6 +730,7 @@
     <div class="detail-header">
       <button class="back-btn" onclick="closeSubView()">← Back</button>
       <h2>Calendar view</h2>
+      <button class="icon-btn" onclick="openSearchView()">🔍 Search notes</button>
     </div>
     <p class="heatmap-hint" style="margin-top:0;margin-bottom:16px;">Darker days mean more of your habits got done.</p>
     <div class="paginator">
@@ -667,6 +765,7 @@
     <div class="detail-header">
       <button class="back-btn" onclick="closeSubView()">← Back</button>
       <h2>Notes</h2>
+      <button class="icon-btn" onclick="openSearchView()">🔍 Search notes</button>
     </div>
     <div class="paginator">
       <button class="nav-arrow" onclick="shiftNotesWeek(1)">‹</button>
@@ -674,6 +773,18 @@
       <button class="nav-arrow" id="notesNextBtn" onclick="shiftNotesWeek(-1)">›</button>
     </div>
     <div id="notesHabitList"></div>
+  </div>
+
+  <div id="searchView" style="display:none;">
+    <div class="detail-header">
+      <button class="back-btn" onclick="closeSubView()">← Back</button>
+      <h2>Search notes</h2>
+    </div>
+    <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Find any word or phrase across every note you've written, for any habit or date.</p>
+    <div class="search-input-row">
+      <input type="text" id="searchInput" placeholder="Type a keyword to search your notes…" oninput="renderSearchResults()">
+    </div>
+    <div id="searchResultsList"></div>
   </div>
 
   <div id="backupView" style="display:none;">
@@ -720,7 +831,7 @@
 </div>
 
 <!-- Add / Edit sheet -->
-<div class="overlay" id="overlay">
+<div class="overlay" id="overlay" onclick="if(event.target===this) closeSheet()">
   <div class="sheet">
     <h2 id="sheetTitle">New habit</h2>
 
@@ -730,16 +841,19 @@
     <label>Frequency</label>
     <div class="freq-toggle">
       <button type="button" id="freqDaily" onclick="setFreq('daily')">Every day</button>
-      <button type="button" id="freqWeekly" onclick="setFreq('weekly')">X times a week</button>
+      <button type="button" id="freqWeekly" onclick="setFreq('weekly')">Specific days</button>
     </div>
     <div class="times-row" id="timesRow">
-      <span style="font-size:13px;color:var(--ink-soft);">Target</span>
-      <div class="stepper">
-        <button type="button" onclick="stepTimes(-1)">−</button>
-        <span id="timesValue">3</span>
-        <button type="button" onclick="stepTimes(1)">+</button>
+      <div class="days-picker" id="daysPicker">
+        <button type="button" class="day-chip" data-day="0" onclick="toggleDayChip(0)">M</button>
+        <button type="button" class="day-chip" data-day="1" onclick="toggleDayChip(1)">T</button>
+        <button type="button" class="day-chip" data-day="2" onclick="toggleDayChip(2)">W</button>
+        <button type="button" class="day-chip" data-day="3" onclick="toggleDayChip(3)">T</button>
+        <button type="button" class="day-chip" data-day="4" onclick="toggleDayChip(4)">F</button>
+        <button type="button" class="day-chip" data-day="5" onclick="toggleDayChip(5)">S</button>
+        <button type="button" class="day-chip" data-day="6" onclick="toggleDayChip(6)">S</button>
       </div>
-      <span style="font-size:13px;color:var(--ink-soft);">per week</span>
+      <p class="days-picker-summary" id="daysPickerSummary">3 times a week</p>
     </div>
 
     <label>Reminder</label>
@@ -756,7 +870,7 @@
 </div>
 
 <!-- Delete confirm -->
-<div class="overlay" id="deleteOverlay">
+<div class="overlay" id="deleteOverlay" onclick="if(event.target===this) closeDeleteOverlay()">
   <div class="sheet">
     <h2>Delete this habit?</h2>
     <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;">This removes <b id="deleteHabitName"></b> and its entire history. This can't be undone.</p>
@@ -768,13 +882,18 @@
 </div>
 
 <!-- Day note sheet -->
-<div class="overlay" id="noteOverlay">
+<div class="overlay" id="noteOverlay" onclick="if(event.target===this) closeNoteSheet()">
   <div class="sheet">
     <h2 id="noteDateLabel">Date</h2>
     <div class="reminder-toggle" style="margin-bottom:6px;">
       <span style="font-size:13px;color:var(--ink-soft);">Completed this day</span>
       <div class="switch" id="noteDoneSwitch" onclick="toggleNoteDone()"></div>
     </div>
+    <div class="reminder-toggle" style="margin-bottom:6px;">
+      <span style="font-size:13px;color:var(--ink-soft);">❄ Freeze this day</span>
+      <div class="switch" id="noteFrozenSwitch" onclick="toggleNoteFrozen()"></div>
+    </div>
+    <p id="freezeRemainingLabel" style="font-size:11px;color:var(--ink-soft);margin:0 0 14px;"></p>
     <label>Note</label>
     <textarea id="noteText" rows="4" placeholder="What happened, how it went..." maxlength="500"></textarea>
     <div class="sheet-actions">
@@ -790,7 +909,7 @@ const STORAGE_KEY = 'streak_tracker_habits_v1';
 let habits = [];
 let editingId = null;
 let currentFreq = 'daily';
-let currentTimes = 3;
+let currentSelectedDays = new Set([0, 2, 4]);
 let reminderOn = false;
 let deleteTargetId = null;
 let openMenuId = null;
@@ -798,6 +917,7 @@ let activeView = 'main';
 let noteEditHabitId = null;
 let noteEditDate = null;
 let noteEditDone = false;
+let noteEditFrozen = false;
 let calYear, calMonth;
 let notesWeekOffset = 0;
 let selectedDayDate = null;
@@ -828,6 +948,8 @@ function load() {
     habits.forEach(h => {
       if (!Array.isArray(h.checkins)) h.checkins = [];
       if (!h.notes || typeof h.notes !== 'object') h.notes = {};
+      if (!Array.isArray(h.freezes)) h.freezes = [];
+      if (!Array.isArray(h.selectedDays)) h.selectedDays = null;
       // migrate from the previous {date, note} object format
       if (h.checkins.length && typeof h.checkins[0] === 'object') {
         const dates = [];
@@ -864,6 +986,7 @@ function refreshAll() {
   if (activeView === 'calendar') renderMonthGrid();
   if (activeView === 'notes') renderNotesList();
   if (activeView === 'day') renderDayView();
+  if (activeView === 'search') renderSearchResults();
   syncReminders().catch(() => { /* silent — Push setup view will show errors if the user checks there */ });
 }
 
@@ -929,8 +1052,11 @@ function computeWeeklyLongest(checkins, target) {
   return longest;
 }
 
+function getEffectiveDates(habit) {
+  return [...new Set([...habit.checkins, ...(habit.freezes || [])])];
+}
 function getStats(habit) {
-  const uniqueCheckins = [...new Set(habit.checkins)];
+  const uniqueCheckins = getEffectiveDates(habit);
   if (habit.frequencyType === 'daily') {
     return {
       current: computeDailyStreak(uniqueCheckins),
@@ -965,6 +1091,8 @@ function render() {
   list.innerHTML = habits.map(h => {
     const stats = getStats(h);
     const checkSet = new Set(h.checkins);
+    const frozenSet = new Set(h.freezes || []);
+    const hasSchedule = h.frequencyType === 'weekly' && Array.isArray(h.selectedDays) && h.selectedDays.length;
     let dayBoxes = '';
     for (let i = 0; i < 7; i++) {
       const d = addDays(thisWeekStart, i);
@@ -972,12 +1100,17 @@ function render() {
       const label = dObj.toLocaleDateString(undefined, { weekday: 'narrow' });
       const isToday = d === today;
       const isFuture = d > today;
+      const isOffDay = hasSchedule && !h.selectedDays.includes(i);
       const done = checkSet.has(d);
-      const clickAttr = isFuture ? '' : ` onclick="toggleCheckin('${h.id}','${d}')"`;
-      dayBoxes += `<div class="day-box ${done ? 'done' : ''} ${isToday ? 'today' : ''} ${isFuture ? 'future' : ''}"${clickAttr}><span class="lbl">${label}</span></div>`;
+      const frozen = !done && frozenSet.has(d);
+      const clickable = !isFuture;
+      const clickAttr = clickable ? ` onclick="toggleCheckin('${h.id}','${d}')"` : '';
+      dayBoxes += `<div class="day-box ${done ? 'done' : ''} ${frozen ? 'frozen' : ''} ${isToday ? 'today' : ''} ${isFuture ? 'future' : ''} ${isOffDay ? 'offday' : ''}"${clickAttr}><span class="lbl">${label}</span></div>`;
     }
 
-    const freqLabel = h.frequencyType === 'daily' ? 'Every day' : `${h.timesPerWeek}× per week`;
+    const freqLabel = h.frequencyType === 'daily'
+      ? 'Every day'
+      : (hasSchedule ? h.selectedDays.map(d => WEEKDAY_LABELS[d]).join(', ') : `${h.timesPerWeek}× per week`);
     const footerParts = [];
     if (h.frequencyType === 'weekly') {
       const weekStart = getWeekStart(today);
@@ -990,7 +1123,7 @@ function render() {
     const footerRight = footerParts.join(' &nbsp;·&nbsp; ');
 
     return `
-      <div class="card">
+      <div class="card" onclick="handleCardClick(event,'${h.id}')" style="cursor:pointer;">
         <div class="card-top">
           <div>
             <p class="habit-name">${escapeHtml(h.name)}</p>
@@ -1010,6 +1143,7 @@ function render() {
           <span>Best: ${stats.longest} ${h.frequencyType === 'daily' ? (stats.longest===1?'day':'days') : (stats.longest===1?'week':'weeks')}</span>
           ${footerRight}
         </div>
+        <p class="card-notes-hint">Tap for notes →</p>
       </div>
     `;
   }).join('');
@@ -1026,8 +1160,13 @@ function toggleCheckin(habitId, dateStr) {
   const h = habits.find(x => x.id === habitId);
   if (!h) return;
   const idx = h.checkins.indexOf(dateStr);
-  if (idx >= 0) h.checkins.splice(idx, 1);
-  else h.checkins.push(dateStr);
+  if (idx >= 0) {
+    h.checkins.splice(idx, 1);
+  } else {
+    h.checkins.push(dateStr);
+    const fIdx = (h.freezes || []).indexOf(dateStr);
+    if (fIdx >= 0) h.freezes.splice(fIdx, 1);
+  }
   save();
   refreshAll();
 }
@@ -1041,15 +1180,39 @@ function toggleMenu(e, id) {
 document.addEventListener('click', () => {
   if (openMenuId) { openMenuId = null; render(); }
 });
+function handleCardClick(event, habitId) {
+  if (event.target.closest('.day-box, .menu-btn, .kebab-menu, .streak-badge')) return;
+  goToHabitNotes(habitId);
+}
+function goToHabitNotes(habitId) {
+  openNotesView();
+  setTimeout(() => {
+    const el = document.getElementById('notes-card-' + habitId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('highlight-flash');
+      setTimeout(() => el.classList.remove('highlight-flash'), 1200);
+    }
+  }, 50);
+}
 
 // ---- Add / Edit sheet ----
+const WEEKDAY_LABELS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function distributeDays(n) {
+  n = Math.max(1, Math.min(7, n));
+  const set = new Set();
+  for (let k = 0; k < n; k++) set.add(Math.round(k * 7 / n) % 7);
+  // guarantee exactly n days even after rounding collisions
+  let next = 0;
+  while (set.size < n && next < 7) { set.add(next); next++; }
+  return [...set].sort((a,b)=>a-b);
+}
 function openAddSheet() {
   editingId = null;
   document.getElementById('sheetTitle').textContent = 'New habit';
   document.getElementById('habitName').value = '';
+  currentSelectedDays = new Set([0, 2, 4]);
   setFreq('daily');
-  currentTimes = 3;
-  document.getElementById('timesValue').textContent = currentTimes;
   document.getElementById('reminderTime').value = '09:00';
   reminderOn = false;
   document.getElementById('reminderSwitch').classList.remove('on');
@@ -1061,9 +1224,10 @@ function openEditSheet(id) {
   editingId = id;
   document.getElementById('sheetTitle').textContent = 'Edit habit';
   document.getElementById('habitName').value = h.name;
+  currentSelectedDays = new Set(
+    Array.isArray(h.selectedDays) && h.selectedDays.length ? h.selectedDays : distributeDays(h.timesPerWeek || 3)
+  );
   setFreq(h.frequencyType);
-  currentTimes = h.timesPerWeek || 3;
-  document.getElementById('timesValue').textContent = currentTimes;
   document.getElementById('reminderTime').value = h.reminderTime || '09:00';
   reminderOn = !!h.reminderOn;
   document.getElementById('reminderSwitch').classList.toggle('on', reminderOn);
@@ -1078,10 +1242,24 @@ function setFreq(type) {
   document.getElementById('freqDaily').classList.toggle('active', type === 'daily');
   document.getElementById('freqWeekly').classList.toggle('active', type === 'weekly');
   document.getElementById('timesRow').classList.toggle('show', type === 'weekly');
+  renderDaysPicker();
 }
-function stepTimes(delta) {
-  currentTimes = Math.min(7, Math.max(1, currentTimes + delta));
-  document.getElementById('timesValue').textContent = currentTimes;
+function renderDaysPicker() {
+  document.querySelectorAll('#daysPicker .day-chip').forEach(chip => {
+    const day = Number(chip.dataset.day);
+    chip.classList.toggle('active', currentSelectedDays.has(day));
+  });
+  const n = currentSelectedDays.size;
+  document.getElementById('daysPickerSummary').textContent = `${n} time${n===1?'':'s'} a week — ${[...currentSelectedDays].sort((a,b)=>a-b).map(d=>WEEKDAY_LABELS[d]).join(', ')}`;
+}
+function toggleDayChip(day) {
+  if (currentSelectedDays.has(day)) {
+    if (currentSelectedDays.size === 1) return; // keep at least one day selected
+    currentSelectedDays.delete(day);
+  } else {
+    currentSelectedDays.add(day);
+  }
+  renderDaysPicker();
 }
 function toggleReminder() {
   reminderOn = !reminderOn;
@@ -1094,12 +1272,14 @@ function saveHabit() {
   const name = document.getElementById('habitName').value.trim();
   if (!name) { alert('Give the habit a name first.'); return; }
   const reminderTime = document.getElementById('reminderTime').value;
+  const selectedDays = [...currentSelectedDays].sort((a,b)=>a-b);
 
   if (editingId) {
     const h = habits.find(x => x.id === editingId);
     h.name = name;
     h.frequencyType = currentFreq;
-    h.timesPerWeek = currentFreq === 'weekly' ? currentTimes : null;
+    h.timesPerWeek = currentFreq === 'weekly' ? selectedDays.length : null;
+    h.selectedDays = currentFreq === 'weekly' ? selectedDays : null;
     h.reminderOn = reminderOn;
     h.reminderTime = reminderTime;
   } else {
@@ -1107,12 +1287,14 @@ function saveHabit() {
       id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
       name,
       frequencyType: currentFreq,
-      timesPerWeek: currentFreq === 'weekly' ? currentTimes : null,
+      timesPerWeek: currentFreq === 'weekly' ? selectedDays.length : null,
+      selectedDays: currentFreq === 'weekly' ? selectedDays : null,
       reminderOn,
       reminderTime,
       createdAt: Date.now(),
       checkins: [],
-      notes: {}
+      notes: {},
+      freezes: []
     });
   }
   save();
@@ -1175,18 +1357,85 @@ function renderDayView() {
   }
   container.innerHTML = habits.map(h => {
     const done = h.checkins.includes(d);
+    const frozen = !done && (h.freezes || []).includes(d);
     const note = getNote(h, d);
-    const freqLabel = h.frequencyType === 'daily' ? 'Every day' : `${h.timesPerWeek}× per week`;
+    const freqLabel = h.frequencyType === 'daily'
+      ? 'Every day'
+      : (Array.isArray(h.selectedDays) && h.selectedDays.length ? h.selectedDays.map(x => WEEKDAY_LABELS[x]).join(', ') : `${h.timesPerWeek}× per week`);
+    const statusLabel = done ? '✓ Done' : (frozen ? '❄ Frozen' : 'Not done');
     return `
       <div class="card" style="cursor:pointer;" onclick="openDayNote('${h.id}','${d}')">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
           <div>
             <p class="habit-name">${escapeHtml(h.name)}</p>
-            <p class="habit-meta">${freqLabel} · ${done ? '✓ Done' : 'Not done'}</p>
+            <p class="habit-meta">${freqLabel} · ${statusLabel}</p>
           </div>
           <div class="note-icon ${note?'filled':''}" style="flex:none;width:40px;height:40px;">${note?'✎':''}</div>
         </div>
         ${note ? `<p style="font-size:12px;color:var(--ink-soft);margin-top:12px;padding-top:10px;border-top:1px solid var(--line);">${escapeHtml(note)}</p>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ---- Search (find a keyword across every habit's notes) ----
+let searchReturnView = 'main';
+function openSearchView() {
+  searchReturnView = activeView === 'search' ? searchReturnView : activeView;
+  activeView = 'search';
+  openMenuId = null;
+  ['mainView','calendarView','notesView','backupView','pushView','dayView'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('searchView').style.display = 'block';
+  document.getElementById('searchInput').value = '';
+  renderSearchResults();
+  window.scrollTo(0, 0);
+  setTimeout(() => document.getElementById('searchInput').focus(), 50);
+}
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function highlightMatch(text, query) {
+  const escaped = escapeHtml(text);
+  if (!query) return escaped;
+  const re = new RegExp(escapeRegex(escapeHtml(query)), 'ig');
+  return escaped.replace(re, (m) => `<mark>${m}</mark>`);
+}
+function searchNotes(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const results = [];
+  habits.forEach(h => {
+    Object.keys(h.notes || {}).forEach(date => {
+      const text = h.notes[date];
+      if (text && text.toLowerCase().includes(q)) {
+        results.push({ habitId: h.id, habitName: h.name, date, text });
+      }
+    });
+  });
+  results.sort((a, b) => b.date.localeCompare(a.date));
+  return results;
+}
+function renderSearchResults() {
+  const query = document.getElementById('searchInput').value;
+  const container = document.getElementById('searchResultsList');
+  if (!query.trim()) {
+    container.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;text-align:center;margin-top:40px;">Start typing to search across every note you've written.</p>`;
+    return;
+  }
+  const results = searchNotes(query);
+  if (results.length === 0) {
+    container.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;text-align:center;margin-top:40px;">No notes match "${escapeHtml(query)}".</p>`;
+    return;
+  }
+  container.innerHTML = results.map(r => {
+    const dateLabel = new Date(r.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    return `
+      <div class="search-result-card" onclick="openDayNote('${r.habitId}','${r.date}')">
+        <div class="search-result-top">
+          <span class="search-result-habit">${escapeHtml(r.habitName)}</span>
+          <span class="search-result-date">${dateLabel}</span>
+        </div>
+        <p class="search-result-snippet">${highlightMatch(r.text, query)}</p>
       </div>
     `;
   }).join('');
@@ -1211,6 +1460,7 @@ function closeSubView() {
   document.getElementById('backupView').style.display = 'none';
   document.getElementById('pushView').style.display = 'none';
   document.getElementById('dayView').style.display = 'none';
+  document.getElementById('searchView').style.display = 'none';
   document.getElementById('mainView').style.display = 'block';
   render();
 }
@@ -1307,9 +1557,11 @@ function renderNotesList() {
       const clickAttr = isFuture ? '' : ` onclick="openDayNote('${h.id}','${d}')"`;
       iconsHtml += `<div class="note-icon ${hasNote?'filled':''} ${isToday?'today':''} ${isFuture?'future':''}"${clickAttr} title="${d}"><span class="lbl">${label}</span>${hasNote?'✎':''}</div>`;
     });
-    const freqLabel = h.frequencyType === 'daily' ? 'Every day' : `${h.timesPerWeek}× per week`;
+    const freqLabel = h.frequencyType === 'daily'
+      ? 'Every day'
+      : (Array.isArray(h.selectedDays) && h.selectedDays.length ? h.selectedDays.map(x => WEEKDAY_LABELS[x]).join(', ') : `${h.timesPerWeek}× per week`);
     return `
-      <div class="card">
+      <div class="card" id="notes-card-${h.id}">
         <p class="habit-name">${escapeHtml(h.name)}</p>
         <p class="habit-meta">${freqLabel}</p>
         <div class="week-row" style="margin-top:14px;">${iconsHtml}</div>
@@ -1444,7 +1696,7 @@ async function syncReminders() {
         reminderOn: true,
         reminderHour: hh,
         reminderMinute: mm,
-        doneToday: h.checkins.includes(today),
+        doneToday: h.checkins.includes(today) || (h.freezes || []).includes(today),
       };
     }),
   };
@@ -1469,21 +1721,60 @@ async function syncRemindersNow() {
 }
 
 // ---- Day note sheet (works for any day, done or not) ----
+const MONTHLY_FREEZE_LIMIT = 3;
+function freezesUsedInMonth(habit, yearMonth, excludeDate) {
+  return (habit.freezes || []).filter(d => d.startsWith(yearMonth) && d !== excludeDate).length;
+}
 function openDayNote(habitId, dateStr) {
   const h = habits.find(x => x.id === habitId);
   if (!h) return;
   noteEditHabitId = habitId;
   noteEditDate = dateStr;
   noteEditDone = h.checkins.includes(dateStr);
+  noteEditFrozen = (h.freezes || []).includes(dateStr);
   const label = new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
   document.getElementById('noteDateLabel').textContent = `${label} · ${h.name}`;
   document.getElementById('noteDoneSwitch').classList.toggle('on', noteEditDone);
+  document.getElementById('noteFrozenSwitch').classList.toggle('on', noteEditFrozen);
   document.getElementById('noteText').value = getNote(h, dateStr);
+  renderFreezeRemainingLabel();
   document.getElementById('noteOverlay').classList.add('open');
+}
+function renderFreezeRemainingLabel() {
+  const h = habits.find(x => x.id === noteEditHabitId);
+  if (!h || !noteEditDate) return;
+  const yearMonth = noteEditDate.slice(0, 7);
+  const usedElsewhere = freezesUsedInMonth(h, yearMonth, noteEditDate);
+  const usedIncludingPending = usedElsewhere + (noteEditFrozen ? 1 : 0);
+  const remaining = Math.max(0, MONTHLY_FREEZE_LIMIT - usedIncludingPending);
+  document.getElementById('freezeRemainingLabel').textContent =
+    `${remaining} of ${MONTHLY_FREEZE_LIMIT} freezes left this month for ${h.name}.`;
 }
 function toggleNoteDone() {
   noteEditDone = !noteEditDone;
+  if (noteEditDone && noteEditFrozen) {
+    noteEditFrozen = false;
+    document.getElementById('noteFrozenSwitch').classList.remove('on');
+  }
   document.getElementById('noteDoneSwitch').classList.toggle('on', noteEditDone);
+}
+function toggleNoteFrozen() {
+  if (!noteEditFrozen) {
+    const h = habits.find(x => x.id === noteEditHabitId);
+    const yearMonth = noteEditDate.slice(0, 7);
+    const used = freezesUsedInMonth(h, yearMonth, noteEditDate);
+    if (used >= MONTHLY_FREEZE_LIMIT) {
+      alert(`You've used all ${MONTHLY_FREEZE_LIMIT} freezes for ${h.name} this month.`);
+      return;
+    }
+  }
+  noteEditFrozen = !noteEditFrozen;
+  if (noteEditFrozen && noteEditDone) {
+    noteEditDone = false;
+    document.getElementById('noteDoneSwitch').classList.remove('on');
+  }
+  document.getElementById('noteFrozenSwitch').classList.toggle('on', noteEditFrozen);
+  renderFreezeRemainingLabel();
 }
 function closeNoteSheet() {
   document.getElementById('noteOverlay').classList.remove('open');
@@ -1495,9 +1786,15 @@ function saveNote() {
   if (!h || !noteEditDate) return;
   const text = document.getElementById('noteText').value;
   setNote(h, noteEditDate, text);
+
   const idx = h.checkins.indexOf(noteEditDate);
   if (noteEditDone && idx < 0) h.checkins.push(noteEditDate);
   if (!noteEditDone && idx >= 0) h.checkins.splice(idx, 1);
+
+  const fIdx = h.freezes.indexOf(noteEditDate);
+  if (noteEditFrozen && fIdx < 0) h.freezes.push(noteEditDate);
+  if (!noteEditFrozen && fIdx >= 0) h.freezes.splice(fIdx, 1);
+
   save();
   closeNoteSheet();
   refreshAll();
@@ -1525,7 +1822,7 @@ function scheduleReminders() {
   const today = todayStr();
   habits.forEach(h => {
     if (!h.reminderOn || !h.reminderTime) return;
-    if (h.checkins.includes(today)) return;
+    if (h.checkins.includes(today) || (h.freezes || []).includes(today)) return;
     const [hh, mm] = h.reminderTime.split(':').map(Number);
     const now = new Date();
     const target = new Date();
@@ -1544,7 +1841,7 @@ function checkOverdueBanner() {
   const today = todayStr();
   const now = new Date();
   const overdue = habits.filter(h => {
-    if (!h.reminderOn || h.checkins.includes(today)) return false;
+    if (!h.reminderOn || h.checkins.includes(today) || (h.freezes || []).includes(today)) return false;
     const [hh, mm] = h.reminderTime.split(':').map(Number);
     const target = new Date();
     target.setHours(hh, mm, 0, 0);
