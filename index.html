@@ -2,6 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+  (function() {
+    try {
+      const saved = localStorage.getItem('streak_tracker_theme');
+      const theme = (saved === 'dark' || saved === 'light') ? saved :
+        (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    } catch (e) { /* ignore — defaults to light */ }
+  })();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Streaks — a personal ledger</title>
 <link rel="manifest" href="manifest.json">
@@ -12,17 +22,38 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper: #121826;
-    --paper-raised: #182033;
-    --ink: #ffffff;
-    --ink-soft: #4f4f4f;
+    --paper: #EDE7D9;
+    --paper-raised: #F5F0E4;
+    --ink: #2A2B24;
+    --ink-soft: #5B5A4E;
     --moss: #4B6650;
     --moss-soft: #DCE4D6;
-    --ochre: #c2c2c2;
+    --ochre: #B98A3C;
     --rose: #A34C3F;
     --frost: #7C9CB8;
-    --line: #000000;
+    --line: #C9BFA8;
+    --level-1: #CFE0C9;
+    --level-2: #9CBB94;
+    --level-3: #6E9868;
+    --overlay-scrim: rgba(42,43,36,0.4);
     --radius: 14px;
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #1E1D18;
+    --paper-raised: #28271F;
+    --ink: #EDE7D9;
+    --ink-soft: #A39C89;
+    --moss: #6B9172;
+    --moss-soft: #2C3A2E;
+    --ochre: #D3A25C;
+    --rose: #C97367;
+    --frost: #8FB3D6;
+    --line: #45433A;
+    --level-1: #2C3A2E;
+    --level-2: #3D5940;
+    --level-3: #4F7A53;
+    --overlay-scrim: rgba(0,0,0,0.6);
   }
 
   * { box-sizing: border-box; }
@@ -31,11 +62,14 @@
     * { animation: none !important; transition: none !important; }
   }
 
+  :root { --dot-color: rgba(42,43,36,0.05); }
+  :root[data-theme="dark"] { --dot-color: rgba(237,231,217,0.045); }
+
   body {
     margin: 0;
     background: var(--paper);
     background-image:
-      radial-gradient(circle at 1px 1px, rgba(45,62,102,0.3) 1px, transparent 0);
+      radial-gradient(circle at 1px 1px, var(--dot-color) 1px, transparent 0);
     background-size: 18px 18px;
     color: var(--ink);
     font-family: 'Inter', sans-serif;
@@ -252,7 +286,7 @@
   .overlay {
     position: fixed;
     inset: 0;
-    background: rgba(42,43,36,0.4);
+    background: var(--overlay-scrim);
     display: none;
     align-items: flex-end;
     justify-content: center;
@@ -567,9 +601,9 @@
   .month-cell.blank { border: none; background: none; cursor: default; }
   .month-cell.future { border-style: dashed; color: var(--line); cursor: default; }
   .month-cell.today { outline: 1.5px solid var(--ink); outline-offset: 1px; }
-  .month-cell.level-1 { background: #CFE0C9; border-color: #CFE0C9; color: var(--ink); }
-  .month-cell.level-2 { background: #9CBB94; border-color: #9CBB94; color: white; }
-  .month-cell.level-3 { background: #6E9868; border-color: #6E9868; color: white; }
+  .month-cell.level-1 { background: var(--level-1); border-color: var(--level-1); color: var(--ink); }
+  .month-cell.level-2 { background: var(--level-2); border-color: var(--level-2); color: white; }
+  .month-cell.level-3 { background: var(--level-3); border-color: var(--level-3); color: white; }
   .month-cell.level-4 { background: var(--moss); border-color: var(--moss); color: white; }
 
   .heatmap-hint {
@@ -593,9 +627,9 @@
     border: 1.5px solid var(--line);
     background: var(--paper);
   }
-  .legend-swatch.level-1 { background: #CFE0C9; border-color: #CFE0C9; }
-  .legend-swatch.level-2 { background: #9CBB94; border-color: #9CBB94; }
-  .legend-swatch.level-3 { background: #6E9868; border-color: #6E9868; }
+  .legend-swatch.level-1 { background: var(--level-1); border-color: var(--level-1); }
+  .legend-swatch.level-2 { background: var(--level-2); border-color: var(--level-2); }
+  .legend-swatch.level-3 { background: var(--level-3); border-color: var(--level-3); }
   .legend-swatch.level-4 { background: var(--moss); border-color: var(--moss); }
 
   /* Search */
@@ -708,6 +742,7 @@
         <button class="nav-btn" onclick="openNotesView()">📝 Notes</button>
         <button class="nav-btn" onclick="openBackupView()">💾 Backup</button>
         <button class="nav-btn" onclick="openPushView()">🔔 Push setup</button>
+        <button class="nav-btn" onclick="toggleDarkMode()" id="darkModeBtn">🌙 Dark mode</button>
       </div>
     </div>
     <div class="today" id="todayLabel"></div>
@@ -728,7 +763,7 @@
 
   <div id="calendarView" style="display:none;">
     <div class="detail-header">
-      <button class="back-btn" onclick="closeSubView()">← Back</button>
+      <button class="back-btn" onclick="dismissTop()">← Back</button>
       <h2>Calendar view</h2>
       <button class="icon-btn" onclick="openSearchView()">🔍 Search notes</button>
     </div>
@@ -755,7 +790,7 @@
 
   <div id="dayView" style="display:none;">
     <div class="detail-header">
-      <button class="back-btn" onclick="closeDayView()">← Back</button>
+      <button class="back-btn" onclick="dismissTop()">← Back</button>
       <h2 id="dayViewDate">Date</h2>
     </div>
     <div id="dayViewList"></div>
@@ -763,7 +798,7 @@
 
   <div id="notesView" style="display:none;">
     <div class="detail-header">
-      <button class="back-btn" onclick="closeSubView()">← Back</button>
+      <button class="back-btn" onclick="dismissTop()">← Back</button>
       <h2>Notes</h2>
       <button class="icon-btn" onclick="openSearchView()">🔍 Search notes</button>
     </div>
@@ -777,7 +812,7 @@
 
   <div id="searchView" style="display:none;">
     <div class="detail-header">
-      <button class="back-btn" onclick="closeSubView()">← Back</button>
+      <button class="back-btn" onclick="dismissTop()">← Back</button>
       <h2>Search notes</h2>
     </div>
     <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:14px;">Find any word or phrase across every note you've written, for any habit or date.</p>
@@ -789,7 +824,7 @@
 
   <div id="backupView" style="display:none;">
     <div class="detail-header">
-      <button class="back-btn" onclick="closeSubView()">← Back</button>
+      <button class="back-btn" onclick="dismissTop()">← Back</button>
       <h2>Backup</h2>
     </div>
     <p style="font-size:13px;color:var(--ink-soft);line-height:1.7;margin-bottom:22px;">
@@ -803,7 +838,7 @@
 
   <div id="pushView" style="display:none;">
     <div class="detail-header">
-      <button class="back-btn" onclick="closeSubView()">← Back</button>
+      <button class="back-btn" onclick="dismissTop()">← Back</button>
       <h2>Push setup</h2>
     </div>
     <p style="font-size:13px;color:var(--ink-soft);line-height:1.7;margin-bottom:18px;">
@@ -831,7 +866,7 @@
 </div>
 
 <!-- Add / Edit sheet -->
-<div class="overlay" id="overlay" onclick="if(event.target===this) closeSheet()">
+<div class="overlay" id="overlay" onclick="if(event.target===this) dismissTop()">
   <div class="sheet">
     <h2 id="sheetTitle">New habit</h2>
 
@@ -863,26 +898,26 @@
     </div>
 
     <div class="sheet-actions">
-      <button class="btn btn-ghost" onclick="closeSheet()">Cancel</button>
+      <button class="btn btn-ghost" onclick="dismissTop()">Cancel</button>
       <button class="btn btn-primary" onclick="saveHabit()">Save</button>
     </div>
   </div>
 </div>
 
 <!-- Delete confirm -->
-<div class="overlay" id="deleteOverlay" onclick="if(event.target===this) closeDeleteOverlay()">
+<div class="overlay" id="deleteOverlay" onclick="if(event.target===this) dismissTop()">
   <div class="sheet">
     <h2>Delete this habit?</h2>
     <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;">This removes <b id="deleteHabitName"></b> and its entire history. This can't be undone.</p>
     <div class="sheet-actions">
-      <button class="btn btn-ghost" onclick="closeDeleteOverlay()">Cancel</button>
+      <button class="btn btn-ghost" onclick="dismissTop()">Cancel</button>
       <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
     </div>
   </div>
 </div>
 
 <!-- Day note sheet -->
-<div class="overlay" id="noteOverlay" onclick="if(event.target===this) closeNoteSheet()">
+<div class="overlay" id="noteOverlay" onclick="if(event.target===this) dismissTop()">
   <div class="sheet">
     <h2 id="noteDateLabel">Date</h2>
     <div class="reminder-toggle" style="margin-bottom:6px;">
@@ -897,7 +932,7 @@
     <label>Note</label>
     <textarea id="noteText" rows="4" placeholder="What happened, how it went..." maxlength="500"></textarea>
     <div class="sheet-actions">
-      <button class="btn btn-ghost" onclick="closeNoteSheet()">Cancel</button>
+      <button class="btn btn-ghost" onclick="dismissTop()">Cancel</button>
       <button class="btn btn-primary" onclick="saveNote()">Save</button>
     </div>
   </div>
@@ -919,6 +954,25 @@ let noteEditDate = null;
 let noteEditDone = false;
 let noteEditFrozen = false;
 let calYear, calMonth;
+
+// ---- Back-button integration ----
+// Every time a full-screen view or modal sheet opens, we push a browser history
+// entry. Pressing the phone's back button then closes just that layer instead of
+// exiting the app, because there's a history entry for it to consume first.
+let backStack = [];
+function pushBackState(closeFn) {
+  backStack.push(closeFn);
+  history.pushState({ streaksLayer: backStack.length }, '');
+}
+function dismissTop() {
+  if (backStack.length === 0) return;
+  history.back();
+}
+window.addEventListener('popstate', () => {
+  if (backStack.length === 0) return; // nothing of ours open — let the browser/OS handle it (exits the app)
+  const closeFn = backStack.pop();
+  closeFn();
+});
 let notesWeekOffset = 0;
 let selectedDayDate = null;
 let dayViewFromCalendar = false;
@@ -1156,6 +1210,11 @@ function escapeHtml(s) {
 }
 
 // ---- Check-in ----
+function hapticTick(strength) {
+  if (navigator.vibrate) {
+    try { navigator.vibrate(strength || 15); } catch (e) { /* some browsers throw if called outside a user gesture */ }
+  }
+}
 function toggleCheckin(habitId, dateStr) {
   const h = habits.find(x => x.id === habitId);
   if (!h) return;
@@ -1167,6 +1226,7 @@ function toggleCheckin(habitId, dateStr) {
     const fIdx = (h.freezes || []).indexOf(dateStr);
     if (fIdx >= 0) h.freezes.splice(fIdx, 1);
   }
+  hapticTick();
   save();
   refreshAll();
 }
@@ -1217,6 +1277,7 @@ function openAddSheet() {
   reminderOn = false;
   document.getElementById('reminderSwitch').classList.remove('on');
   document.getElementById('overlay').classList.add('open');
+  pushBackState(closeSheet);
 }
 function openEditSheet(id) {
   const h = habits.find(x => x.id === id);
@@ -1233,6 +1294,7 @@ function openEditSheet(id) {
   document.getElementById('reminderSwitch').classList.toggle('on', reminderOn);
   openMenuId = null;
   document.getElementById('overlay').classList.add('open');
+  pushBackState(closeSheet);
 }
 function closeSheet() {
   document.getElementById('overlay').classList.remove('open');
@@ -1298,7 +1360,7 @@ function saveHabit() {
     });
   }
   save();
-  closeSheet();
+  dismissTop();
   refreshAll();
   scheduleReminders();
 }
@@ -1310,6 +1372,7 @@ function openDeleteOverlay(id) {
   document.getElementById('deleteHabitName').textContent = h ? h.name : '';
   openMenuId = null;
   document.getElementById('deleteOverlay').classList.add('open');
+  pushBackState(closeDeleteOverlay);
 }
 function closeDeleteOverlay() {
   document.getElementById('deleteOverlay').classList.remove('open');
@@ -1318,7 +1381,7 @@ function closeDeleteOverlay() {
 function confirmDelete() {
   habits = habits.filter(x => x.id !== deleteTargetId);
   save();
-  closeDeleteOverlay();
+  dismissTop();
   refreshAll();
 }
 
@@ -1333,6 +1396,7 @@ function openDayView(date) {
   document.getElementById('dayView').style.display = 'block';
   renderDayView();
   window.scrollTo(0, 0);
+  pushBackState(closeDayView);
 }
 function closeDayView() {
   document.getElementById('dayView').style.display = 'none';
@@ -1392,6 +1456,23 @@ function openSearchView() {
   renderSearchResults();
   window.scrollTo(0, 0);
   setTimeout(() => document.getElementById('searchInput').focus(), 50);
+  pushBackState(closeSearchView);
+}
+function closeSearchView() {
+  document.getElementById('searchView').style.display = 'none';
+  if (searchReturnView === 'calendar') {
+    activeView = 'calendar';
+    document.getElementById('calendarView').style.display = 'block';
+    renderMonthGrid();
+  } else if (searchReturnView === 'notes') {
+    activeView = 'notes';
+    document.getElementById('notesView').style.display = 'block';
+    renderNotesList();
+  } else {
+    activeView = 'main';
+    document.getElementById('mainView').style.display = 'block';
+    render();
+  }
 }
 function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 function highlightMatch(text, query) {
@@ -1452,6 +1533,7 @@ function openCalendarView() {
   document.getElementById('calendarView').style.display = 'block';
   renderMonthGrid();
   window.scrollTo(0, 0);
+  pushBackState(closeSubView);
 }
 function closeSubView() {
   activeView = 'main';
@@ -1520,6 +1602,7 @@ function openNotesView() {
   document.getElementById('notesView').style.display = 'block';
   renderNotesList();
   window.scrollTo(0, 0);
+  pushBackState(closeSubView);
 }
 function shiftNotesWeek(direction) {
   notesWeekOffset = Math.max(0, notesWeekOffset + direction);
@@ -1578,6 +1661,7 @@ function openBackupView() {
   document.getElementById('backupView').style.display = 'block';
   renderBackupInfo();
   window.scrollTo(0, 0);
+  pushBackState(closeSubView);
 }
 function renderBackupInfo() {
   const last = localStorage.getItem('streak_tracker_last_backup');
@@ -1652,6 +1736,7 @@ function openPushView() {
     ? 'Saved. Reminders will sync automatically as you use the app.'
     : 'Not set up yet — fill in the fields above and tap Save.';
   window.scrollTo(0, 0);
+  pushBackState(closeSubView);
 }
 function savePushConfig() {
   const topic = document.getElementById('pushTopic').value.trim();
@@ -1739,6 +1824,7 @@ function openDayNote(habitId, dateStr) {
   document.getElementById('noteText').value = getNote(h, dateStr);
   renderFreezeRemainingLabel();
   document.getElementById('noteOverlay').classList.add('open');
+  pushBackState(closeNoteSheet);
 }
 function renderFreezeRemainingLabel() {
   const h = habits.find(x => x.id === noteEditHabitId);
@@ -1757,6 +1843,7 @@ function toggleNoteDone() {
     document.getElementById('noteFrozenSwitch').classList.remove('on');
   }
   document.getElementById('noteDoneSwitch').classList.toggle('on', noteEditDone);
+  hapticTick();
 }
 function toggleNoteFrozen() {
   if (!noteEditFrozen) {
@@ -1775,6 +1862,7 @@ function toggleNoteFrozen() {
   }
   document.getElementById('noteFrozenSwitch').classList.toggle('on', noteEditFrozen);
   renderFreezeRemainingLabel();
+  hapticTick(10);
 }
 function closeNoteSheet() {
   document.getElementById('noteOverlay').classList.remove('open');
@@ -1796,7 +1884,7 @@ function saveNote() {
   if (!noteEditFrozen && fIdx >= 0) h.freezes.splice(fIdx, 1);
 
   save();
-  closeNoteSheet();
+  dismissTop();
   refreshAll();
 }
 
@@ -1855,6 +1943,28 @@ function checkOverdueBanner() {
     banner.classList.remove('show');
   }
 }
+
+// ---- Dark mode ----
+const THEME_KEY = 'streak_tracker_theme';
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme === 'dark' ? '#1E1D18' : '#2A2B24');
+  const btn = document.getElementById('darkModeBtn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode';
+}
+function getPreferredTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === 'dark' || saved === 'light') return saved;
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function toggleDarkMode() {
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+}
+applyTheme(getPreferredTheme());
 
 // ---- Init ----
 load();
