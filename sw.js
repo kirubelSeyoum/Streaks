@@ -1,4 +1,4 @@
-const CACHE_NAME = 'streaks-cache-v7';
+const CACHE_NAME = 'streaks-cache-v10';
 const SHELL_FILES = [
   './index.html',
   './manifest.json',

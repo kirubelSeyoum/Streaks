@@ -173,7 +173,7 @@
     color: var(--ochre);
     border-radius: 999px;
     padding: 5px 12px;
-    transform: rotate(0deg);
+    transform: rotate(-2deg);
     white-space: nowrap;
     flex-shrink: 0;
   }
@@ -219,6 +219,12 @@
   .day-box.future { cursor: default; opacity: 0.4; }
   .day-box.offday { opacity: 0.35; border-style: dotted; }
   .day-box.offday.done { opacity: 0.85; }
+  .day-box.done.tiny {
+    background: var(--moss-soft);
+    border: 1.5px solid var(--moss);
+    color: var(--ink);
+  }
+  .day-box.done.tiny::after { content: "🌱"; font-size: 11px; }
   .day-box.frozen {
     background: var(--frost);
     border: 1.5px solid var(--frost);
@@ -258,6 +264,27 @@
     opacity: 0.6;
     text-align: right;
     margin: 6px 0 0;
+  }
+
+  .quick-tiny-btn {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    border: 1.5px dashed var(--moss);
+    background: transparent;
+    color: var(--moss);
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .quick-tiny-btn.active {
+    border-style: solid;
+    background: var(--moss-soft);
   }
 
   .highlight-flash { animation: flashHighlight 1.2s ease-out; }
@@ -476,6 +503,28 @@
     display: none;
   }
   .banner.show { display: block; }
+  .banner.kaizen-banner {
+    background: rgba(185,138,60,0.14);
+    border-color: var(--ochre);
+    color: var(--ochre);
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .banner.kaizen-banner.show { display: flex; }
+  .banner-action {
+    background: none;
+    border: 1.5px solid var(--ochre);
+    color: var(--ochre);
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
 
   .nav-row {
     display: flex;
@@ -661,6 +710,129 @@
     margin-bottom: 12px;
     cursor: pointer;
   }
+
+  .review-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .review-card .habit-name { font-size: 16px; margin: 0; }
+  .review-card .review-stat { font-size: 12px; color: var(--ink-soft); margin: 2px 0 12px; }
+  .review-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .review-actions button {
+    flex: 1;
+    min-width: 90px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1.5px solid var(--line);
+    background: var(--paper);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .review-actions button.primary { background: var(--moss); border-color: var(--moss); color: white; }
+  .review-actions button.danger { color: var(--rose); border-color: var(--rose); }
+
+  /* Insights */
+  .insights-section-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 15px;
+    margin: 22px 0 12px;
+  }
+  .ranking-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .ranking-name {
+    font-size: 12px;
+    width: 84px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ranking-bar-track {
+    flex: 1;
+    height: 14px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+  .ranking-bar-fill {
+    height: 100%;
+    background: var(--moss);
+    border-radius: 7px;
+  }
+  .ranking-pct {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    width: 34px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .habit-picker {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .habit-pill {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    background: var(--paper-raised);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .habit-pill.active { background: var(--moss); border-color: var(--moss); color: white; }
+  .insights-stats {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .trend-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 110px;
+  }
+  .trend-bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+  }
+  .trend-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    background: var(--moss);
+    min-height: 2px;
+  }
+  .trend-bar.empty {
+    background: transparent;
+    border: 1.5px dashed var(--line);
+    height: 4px !important;
+    align-self: flex-end;
+  }
+  .trend-bar-label {
+    font-size: 8px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
   .search-result-top {
     display: flex;
     justify-content: space-between;
@@ -742,6 +914,7 @@
         <button class="nav-btn" onclick="openNotesView()">📝 Notes</button>
         <button class="nav-btn" onclick="openBackupView()">💾 Backup</button>
         <button class="nav-btn" onclick="openPushView()">🔔 Push setup</button>
+        <button class="nav-btn" onclick="openInsightsView()">📊 Insights</button>
         <button class="nav-btn" onclick="toggleDarkMode()" id="darkModeBtn">🌙 Dark mode</button>
       </div>
     </div>
@@ -749,6 +922,10 @@
   </header>
 
   <div class="banner" id="reminderBanner"></div>
+  <div class="banner kaizen-banner" id="kaizenBanner">
+    <span id="kaizenBannerText"></span>
+    <button class="banner-action" onclick="openReviewSheet()">Review</button>
+  </div>
 
   <div id="emptyState" class="empty" style="display:none;">
     <div class="mark">·</div>
@@ -863,6 +1040,22 @@
     <button class="btn btn-ghost" style="width:100%;margin-top:10px;" onclick="syncRemindersNow()">🔄 Sync now</button>
     <p id="pushStatusLabel" style="font-size:11px;color:var(--ink-soft);text-align:center;margin-top:14px;"></p>
   </div>
+
+  <div id="insightsView" style="display:none;">
+    <div class="detail-header">
+      <button class="back-btn" onclick="dismissTop()">← Back</button>
+      <h2>Insights</h2>
+    </div>
+
+    <h3 class="insights-section-title">Last 30 days, ranked</h3>
+    <div id="rankingList"></div>
+
+    <h3 class="insights-section-title">Habit trend</h3>
+    <div class="habit-picker" id="insightsHabitPicker"></div>
+    <div class="insights-stats" id="insightsStatChips"></div>
+    <div class="trend-chart" id="trendChart"></div>
+    <p class="heatmap-hint" id="trendHint" style="margin-top:14px;"></p>
+  </div>
 </div>
 
 <!-- Add / Edit sheet -->
@@ -891,6 +1084,9 @@
       <p class="days-picker-summary" id="daysPickerSummary">3 times a week</p>
     </div>
 
+    <label>Tiny version <span style="font-weight:400;text-transform:none;color:var(--ink-soft);">— an easy fallback for hard days (optional)</span></label>
+    <input type="text" id="tinyVersionInput" placeholder="e.g. Just put on my shoes" maxlength="60">
+
     <label>Reminder</label>
     <div class="reminder-toggle">
       <input type="time" id="reminderTime" value="09:00" style="width:auto;flex:1;margin-right:10px;">
@@ -916,6 +1112,17 @@
   </div>
 </div>
 
+<div class="overlay" id="reviewOverlay" onclick="if(event.target===this) dismissTop()">
+  <div class="sheet">
+    <h2>Worth a rethink?</h2>
+    <p style="font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:18px;">Small tweaks now beat quitting later. No pressure — just an honest check-in.</p>
+    <div id="reviewList"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" onclick="dismissTop()" style="flex:1;">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Day note sheet -->
 <div class="overlay" id="noteOverlay" onclick="if(event.target===this) dismissTop()">
   <div class="sheet">
@@ -923,6 +1130,10 @@
     <div class="reminder-toggle" style="margin-bottom:6px;">
       <span style="font-size:13px;color:var(--ink-soft);">Completed this day</span>
       <div class="switch" id="noteDoneSwitch" onclick="toggleNoteDone()"></div>
+    </div>
+    <div class="reminder-toggle" id="tinyVersionRow" style="margin-bottom:6px;display:none;">
+      <span style="font-size:13px;color:var(--ink-soft);" id="tinyVersionLabel">🌱 Just did the tiny version</span>
+      <div class="switch" id="noteTinySwitch" onclick="toggleNoteTiny()"></div>
     </div>
     <div class="reminder-toggle" style="margin-bottom:6px;">
       <span style="font-size:13px;color:var(--ink-soft);">❄ Freeze this day</span>
@@ -953,7 +1164,9 @@ let noteEditHabitId = null;
 let noteEditDate = null;
 let noteEditDone = false;
 let noteEditFrozen = false;
+let noteEditTiny = false;
 let calYear, calMonth;
+let insightsSelectedHabitId = null;
 
 // ---- Back-button integration ----
 // Every time a full-screen view or modal sheet opens, we push a browser history
@@ -963,6 +1176,10 @@ let backStack = [];
 function pushBackState(closeFn) {
   backStack.push(closeFn);
   history.pushState({ streaksLayer: backStack.length }, '');
+}
+function bringToFront(elementId) {
+  const el = document.getElementById(elementId);
+  if (el) el.style.zIndex = 100 + backStack.length;
 }
 function dismissTop() {
   if (backStack.length === 0) return;
@@ -1004,6 +1221,9 @@ function load() {
       if (!h.notes || typeof h.notes !== 'object') h.notes = {};
       if (!Array.isArray(h.freezes)) h.freezes = [];
       if (!Array.isArray(h.selectedDays)) h.selectedDays = null;
+      if (typeof h.tinyVersion !== 'string') h.tinyVersion = '';
+      if (!Array.isArray(h.tinyCheckins)) h.tinyCheckins = [];
+      if (typeof h.reviewSnoozedUntil !== 'string') h.reviewSnoozedUntil = null;
       // migrate from the previous {date, note} object format
       if (h.checkins.length && typeof h.checkins[0] === 'object') {
         const dates = [];
@@ -1041,6 +1261,8 @@ function refreshAll() {
   if (activeView === 'notes') renderNotesList();
   if (activeView === 'day') renderDayView();
   if (activeView === 'search') renderSearchResults();
+  if (activeView === 'insights') renderInsights();
+  if (document.getElementById('reviewOverlay').classList.contains('open')) renderReviewList();
   syncReminders().catch(() => { /* silent — Push setup view will show errors if the user checks there */ });
 }
 
@@ -1130,6 +1352,7 @@ function render() {
   const list = document.getElementById('habitList');
   const empty = document.getElementById('emptyState');
   const fab = document.getElementById('fabBtn');
+  checkKaizenBanner();
 
   if (habits.length === 0) {
     empty.style.display = 'block';
@@ -1146,6 +1369,7 @@ function render() {
     const stats = getStats(h);
     const checkSet = new Set(h.checkins);
     const frozenSet = new Set(h.freezes || []);
+    const tinySet = new Set(h.tinyCheckins || []);
     const hasSchedule = h.frequencyType === 'weekly' && Array.isArray(h.selectedDays) && h.selectedDays.length;
     let dayBoxes = '';
     for (let i = 0; i < 7; i++) {
@@ -1156,10 +1380,11 @@ function render() {
       const isFuture = d > today;
       const isOffDay = hasSchedule && !h.selectedDays.includes(i);
       const done = checkSet.has(d);
+      const tiny = done && tinySet.has(d);
       const frozen = !done && frozenSet.has(d);
       const clickable = !isFuture;
       const clickAttr = clickable ? ` onclick="toggleCheckin('${h.id}','${d}')"` : '';
-      dayBoxes += `<div class="day-box ${done ? 'done' : ''} ${frozen ? 'frozen' : ''} ${isToday ? 'today' : ''} ${isFuture ? 'future' : ''} ${isOffDay ? 'offday' : ''}"${clickAttr}><span class="lbl">${label}</span></div>`;
+      dayBoxes += `<div class="day-box ${done ? 'done' : ''} ${tiny ? 'tiny' : ''} ${frozen ? 'frozen' : ''} ${isToday ? 'today' : ''} ${isFuture ? 'future' : ''} ${isOffDay ? 'offday' : ''}"${clickAttr}><span class="lbl">${label}</span></div>`;
     }
 
     const freqLabel = h.frequencyType === 'daily'
@@ -1175,6 +1400,17 @@ function render() {
       footerParts.push(`<span>⏰ ${h.reminderTime}</span>`);
     }
     const footerRight = footerParts.join(' &nbsp;·&nbsp; ');
+
+    let tinyBtnHtml = '';
+    if (h.tinyVersion && h.tinyVersion.trim()) {
+      const todayDone = checkSet.has(today);
+      const todayTiny = tinySet.has(today);
+      let tinyLabel;
+      if (!todayDone) tinyLabel = `🌱 Log tiny version instead — ${escapeHtml(h.tinyVersion)}`;
+      else if (todayTiny) tinyLabel = `🌱 Tiny version logged — tap to undo`;
+      else tinyLabel = `🌱 Actually, just the tiny version`;
+      tinyBtnHtml = `<button class="quick-tiny-btn ${todayTiny ? 'active' : ''}" onclick="event.stopPropagation(); quickTinyToggle('${h.id}','${today}')">${tinyLabel}</button>`;
+    }
 
     return `
       <div class="card" onclick="handleCardClick(event,'${h.id}')" style="cursor:pointer;">
@@ -1193,6 +1429,7 @@ function render() {
           <button class="danger" onclick="openDeleteOverlay('${h.id}')">Delete</button>
         </div>
         <div class="week-row">${dayBoxes}</div>
+        ${tinyBtnHtml}
         <div class="card-footer">
           <span>Best: ${stats.longest} ${h.frequencyType === 'daily' ? (stats.longest===1?'day':'days') : (stats.longest===1?'week':'weeks')}</span>
           ${footerRight}
@@ -1218,15 +1455,46 @@ function hapticTick(strength) {
 function toggleCheckin(habitId, dateStr) {
   const h = habits.find(x => x.id === habitId);
   if (!h) return;
-  const idx = h.checkins.indexOf(dateStr);
-  if (idx >= 0) {
-    h.checkins.splice(idx, 1);
+  const inCheckins = h.checkins.includes(dateStr);
+  const inTiny = (h.tinyCheckins || []).includes(dateStr);
+
+  if (inCheckins && inTiny) {
+    // was logged as the tiny version -> tapping the box upgrades it to a full completion
+    h.tinyCheckins.splice(h.tinyCheckins.indexOf(dateStr), 1);
+  } else if (inCheckins && !inTiny) {
+    // was a full completion -> clear it entirely
+    h.checkins.splice(h.checkins.indexOf(dateStr), 1);
   } else {
+    // wasn't done -> mark a full completion
     h.checkins.push(dateStr);
     const fIdx = (h.freezes || []).indexOf(dateStr);
     if (fIdx >= 0) h.freezes.splice(fIdx, 1);
   }
   hapticTick();
+  save();
+  refreshAll();
+}
+function quickTinyToggle(habitId, dateStr) {
+  const h = habits.find(x => x.id === habitId);
+  if (!h) return;
+  const inCheckins = h.checkins.includes(dateStr);
+  const inTiny = (h.tinyCheckins || []).includes(dateStr);
+
+  if (inCheckins && inTiny) {
+    // already logged as tiny -> undo entirely
+    h.checkins.splice(h.checkins.indexOf(dateStr), 1);
+    h.tinyCheckins.splice(h.tinyCheckins.indexOf(dateStr), 1);
+  } else if (inCheckins && !inTiny) {
+    // was a full completion -> downgrade to "just the tiny version"
+    h.tinyCheckins.push(dateStr);
+  } else {
+    // wasn't done -> log the tiny version
+    h.checkins.push(dateStr);
+    h.tinyCheckins.push(dateStr);
+    const fIdx = (h.freezes || []).indexOf(dateStr);
+    if (fIdx >= 0) h.freezes.splice(fIdx, 1);
+  }
+  hapticTick(10);
   save();
   refreshAll();
 }
@@ -1241,7 +1509,7 @@ document.addEventListener('click', () => {
   if (openMenuId) { openMenuId = null; render(); }
 });
 function handleCardClick(event, habitId) {
-  if (event.target.closest('.day-box, .menu-btn, .kebab-menu, .streak-badge')) return;
+  if (event.target.closest('.day-box, .menu-btn, .kebab-menu, .streak-badge, .quick-tiny-btn')) return;
   goToHabitNotes(habitId);
 }
 function goToHabitNotes(habitId) {
@@ -1271,6 +1539,7 @@ function openAddSheet() {
   editingId = null;
   document.getElementById('sheetTitle').textContent = 'New habit';
   document.getElementById('habitName').value = '';
+  document.getElementById('tinyVersionInput').value = '';
   currentSelectedDays = new Set([0, 2, 4]);
   setFreq('daily');
   document.getElementById('reminderTime').value = '09:00';
@@ -1278,6 +1547,7 @@ function openAddSheet() {
   document.getElementById('reminderSwitch').classList.remove('on');
   document.getElementById('overlay').classList.add('open');
   pushBackState(closeSheet);
+  bringToFront('overlay');
 }
 function openEditSheet(id) {
   const h = habits.find(x => x.id === id);
@@ -1285,6 +1555,7 @@ function openEditSheet(id) {
   editingId = id;
   document.getElementById('sheetTitle').textContent = 'Edit habit';
   document.getElementById('habitName').value = h.name;
+  document.getElementById('tinyVersionInput').value = h.tinyVersion || '';
   currentSelectedDays = new Set(
     Array.isArray(h.selectedDays) && h.selectedDays.length ? h.selectedDays : distributeDays(h.timesPerWeek || 3)
   );
@@ -1295,6 +1566,7 @@ function openEditSheet(id) {
   openMenuId = null;
   document.getElementById('overlay').classList.add('open');
   pushBackState(closeSheet);
+  bringToFront('overlay');
 }
 function closeSheet() {
   document.getElementById('overlay').classList.remove('open');
@@ -1333,12 +1605,14 @@ function toggleReminder() {
 function saveHabit() {
   const name = document.getElementById('habitName').value.trim();
   if (!name) { alert('Give the habit a name first.'); return; }
+  const tinyVersion = document.getElementById('tinyVersionInput').value.trim();
   const reminderTime = document.getElementById('reminderTime').value;
   const selectedDays = [...currentSelectedDays].sort((a,b)=>a-b);
 
   if (editingId) {
     const h = habits.find(x => x.id === editingId);
     h.name = name;
+    h.tinyVersion = tinyVersion;
     h.frequencyType = currentFreq;
     h.timesPerWeek = currentFreq === 'weekly' ? selectedDays.length : null;
     h.selectedDays = currentFreq === 'weekly' ? selectedDays : null;
@@ -1348,6 +1622,7 @@ function saveHabit() {
     habits.push({
       id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
       name,
+      tinyVersion,
       frequencyType: currentFreq,
       timesPerWeek: currentFreq === 'weekly' ? selectedDays.length : null,
       selectedDays: currentFreq === 'weekly' ? selectedDays : null,
@@ -1356,7 +1631,9 @@ function saveHabit() {
       createdAt: Date.now(),
       checkins: [],
       notes: {},
-      freezes: []
+      freezes: [],
+      tinyCheckins: [],
+      reviewSnoozedUntil: null
     });
   }
   save();
@@ -1373,6 +1650,7 @@ function openDeleteOverlay(id) {
   openMenuId = null;
   document.getElementById('deleteOverlay').classList.add('open');
   pushBackState(closeDeleteOverlay);
+  bringToFront('deleteOverlay');
 }
 function closeDeleteOverlay() {
   document.getElementById('deleteOverlay').classList.remove('open');
@@ -1422,11 +1700,12 @@ function renderDayView() {
   container.innerHTML = habits.map(h => {
     const done = h.checkins.includes(d);
     const frozen = !done && (h.freezes || []).includes(d);
+    const tiny = done && (h.tinyCheckins || []).includes(d);
     const note = getNote(h, d);
     const freqLabel = h.frequencyType === 'daily'
       ? 'Every day'
       : (Array.isArray(h.selectedDays) && h.selectedDays.length ? h.selectedDays.map(x => WEEKDAY_LABELS[x]).join(', ') : `${h.timesPerWeek}× per week`);
-    const statusLabel = done ? '✓ Done' : (frozen ? '❄ Frozen' : 'Not done');
+    const statusLabel = tiny ? '🌱 Tiny version' : (done ? '✓ Done' : (frozen ? '❄ Frozen' : 'Not done'));
     return `
       <div class="card" style="cursor:pointer;" onclick="openDayNote('${h.id}','${d}')">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
@@ -1543,6 +1822,7 @@ function closeSubView() {
   document.getElementById('pushView').style.display = 'none';
   document.getElementById('dayView').style.display = 'none';
   document.getElementById('searchView').style.display = 'none';
+  document.getElementById('insightsView').style.display = 'none';
   document.getElementById('mainView').style.display = 'block';
   render();
 }
@@ -1817,14 +2097,22 @@ function openDayNote(habitId, dateStr) {
   noteEditDate = dateStr;
   noteEditDone = h.checkins.includes(dateStr);
   noteEditFrozen = (h.freezes || []).includes(dateStr);
+  noteEditTiny = (h.tinyCheckins || []).includes(dateStr);
   const label = new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
   document.getElementById('noteDateLabel').textContent = `${label} · ${h.name}`;
   document.getElementById('noteDoneSwitch').classList.toggle('on', noteEditDone);
   document.getElementById('noteFrozenSwitch').classList.toggle('on', noteEditFrozen);
+  const hasTiny = !!(h.tinyVersion && h.tinyVersion.trim());
+  document.getElementById('tinyVersionRow').style.display = hasTiny ? 'flex' : 'none';
+  if (hasTiny) {
+    document.getElementById('tinyVersionLabel').textContent = `🌱 Just did the tiny version (${h.tinyVersion})`;
+  }
+  document.getElementById('noteTinySwitch').classList.toggle('on', noteEditTiny);
   document.getElementById('noteText').value = getNote(h, dateStr);
   renderFreezeRemainingLabel();
   document.getElementById('noteOverlay').classList.add('open');
   pushBackState(closeNoteSheet);
+  bringToFront('noteOverlay');
 }
 function renderFreezeRemainingLabel() {
   const h = habits.find(x => x.id === noteEditHabitId);
@@ -1842,8 +2130,28 @@ function toggleNoteDone() {
     noteEditFrozen = false;
     document.getElementById('noteFrozenSwitch').classList.remove('on');
   }
+  if (!noteEditDone && noteEditTiny) {
+    noteEditTiny = false;
+    document.getElementById('noteTinySwitch').classList.remove('on');
+  }
   document.getElementById('noteDoneSwitch').classList.toggle('on', noteEditDone);
   hapticTick();
+}
+function toggleNoteTiny() {
+  noteEditTiny = !noteEditTiny;
+  if (noteEditTiny) {
+    if (!noteEditDone) {
+      noteEditDone = true;
+      document.getElementById('noteDoneSwitch').classList.add('on');
+    }
+    if (noteEditFrozen) {
+      noteEditFrozen = false;
+      document.getElementById('noteFrozenSwitch').classList.remove('on');
+      renderFreezeRemainingLabel();
+    }
+  }
+  document.getElementById('noteTinySwitch').classList.toggle('on', noteEditTiny);
+  hapticTick(10);
 }
 function toggleNoteFrozen() {
   if (!noteEditFrozen) {
@@ -1859,6 +2167,10 @@ function toggleNoteFrozen() {
   if (noteEditFrozen && noteEditDone) {
     noteEditDone = false;
     document.getElementById('noteDoneSwitch').classList.remove('on');
+  }
+  if (noteEditFrozen && noteEditTiny) {
+    noteEditTiny = false;
+    document.getElementById('noteTinySwitch').classList.remove('on');
   }
   document.getElementById('noteFrozenSwitch').classList.toggle('on', noteEditFrozen);
   renderFreezeRemainingLabel();
@@ -1882,6 +2194,10 @@ function saveNote() {
   const fIdx = h.freezes.indexOf(noteEditDate);
   if (noteEditFrozen && fIdx < 0) h.freezes.push(noteEditDate);
   if (!noteEditFrozen && fIdx >= 0) h.freezes.splice(fIdx, 1);
+
+  const tIdx = h.tinyCheckins.indexOf(noteEditDate);
+  if (noteEditTiny && tIdx < 0) h.tinyCheckins.push(noteEditDate);
+  if (!noteEditTiny && tIdx >= 0) h.tinyCheckins.splice(tIdx, 1);
 
   save();
   dismissTop();
@@ -1942,6 +2258,248 @@ function checkOverdueBanner() {
   } else {
     banner.classList.remove('show');
   }
+}
+
+// ---- Kaizen: low-completion review prompts ----
+// Small, non-judgmental nudge: habits that have been consistently hard lately are
+// surfaced with an offer to shrink them down, snooze the check, or let them go —
+// rather than silently piling up as quiet failures.
+const KAIZEN_LOW_RATE_THRESHOLD = 0.4;
+const KAIZEN_SNOOZE_DAYS = 14;
+function getHabitsNeedingReview() {
+  const today = todayStr();
+  const results = [];
+  habits.forEach(h => {
+    if (h.reviewSnoozedUntil && h.reviewSnoozedUntil > today) return;
+    const createdDateStr = todayStr(new Date(h.createdAt));
+    const daysSinceCreated = Math.round((new Date(today + 'T00:00:00') - new Date(createdDateStr + 'T00:00:00')) / 86400000);
+
+    if (h.frequencyType === 'daily') {
+      if (daysSinceCreated < 7) return;
+      const windowDays = Math.min(14, daysSinceCreated + 1);
+      let doneCount = 0;
+      for (let i = 0; i < windowDays; i++) {
+        const d = addDays(today, -i);
+        if (h.checkins.includes(d) || (h.freezes || []).includes(d)) doneCount++;
+      }
+      const rate = doneCount / windowDays;
+      if (rate < KAIZEN_LOW_RATE_THRESHOLD) {
+        results.push({ habit: h, statText: `${doneCount} of the last ${windowDays} days` });
+      }
+    } else {
+      const weeksSinceCreated = Math.floor(daysSinceCreated / 7);
+      if (weeksSinceCreated < 2) return;
+      const weeksToCheck = Math.min(4, weeksSinceCreated);
+      const target = h.timesPerWeek || 1;
+      let totalRatio = 0;
+      for (let w = 0; w < weeksToCheck; w++) {
+        const weekStart = addDays(getWeekStart(today), -7 * w);
+        const count = h.checkins.filter(d => getWeekStart(d) === weekStart).length;
+        totalRatio += Math.min(1, count / target);
+      }
+      const avgRatio = totalRatio / weeksToCheck;
+      if (avgRatio < KAIZEN_LOW_RATE_THRESHOLD) {
+        results.push({ habit: h, statText: `averaging ${Math.round(avgRatio * target * 10) / 10} of ${target} over the last ${weeksToCheck} weeks` });
+      }
+    }
+  });
+  return results;
+}
+function checkKaizenBanner() {
+  const banner = document.getElementById('kaizenBanner');
+  const flagged = getHabitsNeedingReview();
+  if (flagged.length > 0) {
+    document.getElementById('kaizenBannerText').textContent =
+      flagged.length === 1
+        ? `"${flagged[0].habit.name}" has been a stretch lately.`
+        : `${flagged.length} habits have been a stretch lately.`;
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// ---- Kaizen review sheet ----
+function openReviewSheet() {
+  openMenuId = null;
+  document.getElementById('reviewOverlay').classList.add('open');
+  pushBackState(closeReviewSheet);
+  bringToFront('reviewOverlay');
+  renderReviewList();
+}
+function closeReviewSheet() {
+  document.getElementById('reviewOverlay').classList.remove('open');
+}
+function renderReviewList() {
+  const flagged = getHabitsNeedingReview();
+  const container = document.getElementById('reviewList');
+  if (flagged.length === 0) {
+    container.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;text-align:center;margin:20px 0;">Nothing needs a rethink right now 🎉</p>`;
+    return;
+  }
+  container.innerHTML = flagged.map(({ habit, statText }) => `
+    <div class="review-card">
+      <p class="habit-name">${escapeHtml(habit.name)}</p>
+      <p class="review-stat">${statText}</p>
+      <div class="review-actions">
+        <button class="primary" onclick="reviewShrinkIt('${habit.id}')">🌱 Shrink it</button>
+        <button onclick="reviewSnooze('${habit.id}')">Not now</button>
+        <button class="danger" onclick="openDeleteOverlay('${habit.id}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+function reviewSnooze(habitId) {
+  const h = habits.find(x => x.id === habitId);
+  if (!h) return;
+  h.reviewSnoozedUntil = addDays(todayStr(), KAIZEN_SNOOZE_DAYS);
+  save();
+  renderReviewList();
+  checkKaizenBanner();
+}
+function reviewShrinkIt(habitId) {
+  dismissTop(); // close the review sheet first
+  setTimeout(() => {
+    openEditSheet(habitId);
+    setTimeout(() => document.getElementById('tinyVersionInput').focus(), 150);
+  }, 80);
+}
+
+// ---- Insights (completion rate, cross-habit ranking, weekly trend) ----
+function getCompletionRate(habit, windowDays) {
+  const today = todayStr();
+  const createdDateStr = todayStr(new Date(habit.createdAt));
+  const daysAlive = Math.max(1, Math.round((new Date(today + 'T00:00:00') - new Date(createdDateStr + 'T00:00:00')) / 86400000) + 1);
+  const effectiveWindow = Math.min(windowDays, daysAlive);
+
+  if (habit.frequencyType === 'daily') {
+    let doneCount = 0;
+    for (let i = 0; i < effectiveWindow; i++) {
+      const d = addDays(today, -i);
+      if (habit.checkins.includes(d) || (habit.freezes || []).includes(d)) doneCount++;
+    }
+    return effectiveWindow > 0 ? doneCount / effectiveWindow : 0;
+  } else {
+    const weeksInWindow = Math.max(1, Math.round(effectiveWindow / 7));
+    const target = habit.timesPerWeek || 1;
+    let totalRatio = 0;
+    for (let w = 0; w < weeksInWindow; w++) {
+      const weekStart = addDays(getWeekStart(today), -7 * w);
+      const count = habit.checkins.filter(d => getWeekStart(d) === weekStart).length;
+      totalRatio += Math.min(1, count / target);
+    }
+    return totalRatio / weeksInWindow;
+  }
+}
+function getWeeklyTrendData(habit, weeksBack) {
+  const today = todayStr();
+  const currentWeekStart = getWeekStart(today);
+  const createdDateStr = todayStr(new Date(habit.createdAt));
+  const weeks = [];
+  for (let w = weeksBack - 1; w >= 0; w--) {
+    const weekStart = addDays(currentWeekStart, -7 * w);
+    const weekEnd = addDays(weekStart, 6);
+    if (weekEnd < createdDateStr) {
+      weeks.push({ weekStart, ratio: null });
+      continue;
+    }
+    let ratio;
+    if (habit.frequencyType === 'daily') {
+      let doneCount = 0;
+      let daysElapsed = 0;
+      for (let d = 0; d < 7; d++) {
+        const date = addDays(weekStart, d);
+        if (date > today || date < createdDateStr) continue;
+        daysElapsed++;
+        if (habit.checkins.includes(date) || (habit.freezes || []).includes(date)) doneCount++;
+      }
+      ratio = daysElapsed > 0 ? doneCount / daysElapsed : null;
+    } else {
+      const target = habit.timesPerWeek || 1;
+      const count = habit.checkins.filter(d => getWeekStart(d) === weekStart).length;
+      ratio = Math.min(1, count / target);
+    }
+    weeks.push({ weekStart, ratio });
+  }
+  return weeks;
+}
+function openInsightsView() {
+  activeView = 'insights';
+  openMenuId = null;
+  document.getElementById('mainView').style.display = 'none';
+  document.getElementById('insightsView').style.display = 'block';
+  if (!insightsSelectedHabitId || !habits.find(h => h.id === insightsSelectedHabitId)) {
+    insightsSelectedHabitId = habits.length ? habits[0].id : null;
+  }
+  renderInsights();
+  window.scrollTo(0, 0);
+  pushBackState(closeSubView);
+}
+function renderInsights() {
+  renderInsightsRanking();
+  renderInsightsHabitPicker();
+  renderInsightsDetail();
+}
+function renderInsightsRanking() {
+  const container = document.getElementById('rankingList');
+  if (habits.length === 0) {
+    container.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;">Add a habit to start seeing insights.</p>`;
+    return;
+  }
+  const ranked = habits.map(h => ({ habit: h, rate: getCompletionRate(h, 30) }))
+    .sort((a, b) => b.rate - a.rate);
+  container.innerHTML = ranked.map(({ habit, rate }) => {
+    const pct = Math.round(rate * 100);
+    return `
+      <div class="ranking-row">
+        <span class="ranking-name">${escapeHtml(habit.name)}</span>
+        <div class="ranking-bar-track"><div class="ranking-bar-fill" style="width:${pct}%;"></div></div>
+        <span class="ranking-pct">${pct}%</span>
+      </div>
+    `;
+  }).join('');
+}
+function renderInsightsHabitPicker() {
+  const container = document.getElementById('insightsHabitPicker');
+  if (habits.length === 0) { container.innerHTML = ''; return; }
+  container.innerHTML = habits.map(h => `
+    <button class="habit-pill ${h.id === insightsSelectedHabitId ? 'active' : ''}" onclick="selectInsightsHabit('${h.id}')">${escapeHtml(h.name)}</button>
+  `).join('');
+}
+function selectInsightsHabit(habitId) {
+  insightsSelectedHabitId = habitId;
+  renderInsightsHabitPicker();
+  renderInsightsDetail();
+}
+function renderInsightsDetail() {
+  const chipsEl = document.getElementById('insightsStatChips');
+  const chartEl = document.getElementById('trendChart');
+  const hintEl = document.getElementById('trendHint');
+  const h = habits.find(x => x.id === insightsSelectedHabitId);
+  if (!h) {
+    chipsEl.innerHTML = '';
+    chartEl.innerHTML = '';
+    hintEl.textContent = '';
+    return;
+  }
+  const r7 = Math.round(getCompletionRate(h, 7) * 100);
+  const r30 = Math.round(getCompletionRate(h, 30) * 100);
+  const rAll = Math.round(getCompletionRate(h, 100000) * 100);
+  chipsEl.innerHTML = `
+    <div class="stat-chip"><b>${r7}%</b><span>last 7 days</span></div>
+    <div class="stat-chip"><b>${r30}%</b><span>last 30 days</span></div>
+    <div class="stat-chip"><b>${rAll}%</b><span>all-time</span></div>
+  `;
+  const weeks = getWeeklyTrendData(h, 12);
+  chartEl.innerHTML = weeks.map(({ weekStart, ratio }) => {
+    if (ratio === null) {
+      return `<div class="trend-bar-col"><div class="trend-bar empty" title="Before this habit started"></div></div>`;
+    }
+    const heightPct = Math.max(3, Math.round(ratio * 100));
+    const label = new Date(weekStart + 'T00:00:00').toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' });
+    return `<div class="trend-bar-col"><div class="trend-bar" style="height:${heightPct}%;" title="${Math.round(ratio*100)}% — week of ${label}"></div></div>`;
+  }).join('');
+  hintEl.textContent = `Weekly completion for "${h.name}" over the last 12 weeks — hover or tap a bar for details.`;
 }
 
 // ---- Dark mode ----
