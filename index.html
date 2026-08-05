@@ -97,11 +97,26 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    justify-content: space-between;
     gap: 6px 12px;
     margin-bottom: 22px;
     padding-bottom: 14px;
     border-bottom: 1px solid var(--line);
+  }
+  .menu-icon-btn {
+    background: none;
+    border: none;
+    font-size: 23px;
+    line-height: 1.1;
+    color: var(--ink);
+    cursor: pointer;
+    padding: 2px 6px 2px 0;
+    flex-shrink: 0;
+    order: -1;
+  }
+  .menu-icon-btn:active { opacity: 0.6; }
+  .header-title-block {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   h1 {
@@ -418,6 +433,25 @@
     color: var(--ink-soft);
   }
 
+  .emoji-picker {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .emoji-chip {
+    aspect-ratio: 1;
+    border-radius: 9px;
+    border: 1.5px solid var(--line);
+    background: var(--paper-raised);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    cursor: pointer;
+  }
+  .emoji-chip.active { background: var(--moss); border-color: var(--moss); }
+  .emoji-chip.none { font-size: 13px; color: var(--ink-soft); }
+
   .reminder-toggle {
     display: flex;
     align-items: center;
@@ -544,6 +578,46 @@
     cursor: pointer;
   }
   .nav-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+  /* Sidebar */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay-scrim);
+    display: none;
+    z-index: 10;
+  }
+  .sidebar-overlay.open { display: block; }
+  .sidebar-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 78vw;
+    max-width: 300px;
+    background: var(--paper);
+    padding: max(24px, env(safe-area-inset-top)) 18px 24px max(18px, env(safe-area-inset-left));
+    box-shadow: 6px 0 24px rgba(0,0,0,0.18);
+    transform: translateX(-105%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+  }
+  .sidebar-overlay.open .sidebar-panel { transform: translateX(0); }
+  .sidebar-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 13px 10px;
+    margin-bottom: 2px;
+    border: none;
+    background: none;
+    border-radius: 9px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .sidebar-item:hover { background: var(--paper-raised); }
 
   /* Sub-pages: calendar view + notes view */
   .detail-header {
@@ -907,15 +981,12 @@
 <div class="app">
   <div id="mainView">
   <header>
-    <div>
+    <button class="menu-icon-btn" onclick="openSidebar()" aria-label="Menu">☰</button>
+    <div class="header-title-block">
       <h1>Streaks</h1>
       <div class="nav-row">
         <button class="nav-btn" onclick="openCalendarView()">📅 Calendar view</button>
-        <button class="nav-btn" onclick="openNotesView()">📝 Notes</button>
-        <button class="nav-btn" onclick="openBackupView()">💾 Backup</button>
-        <button class="nav-btn" onclick="openPushView()">🔔 Push setup</button>
         <button class="nav-btn" onclick="openInsightsView()">📊 Insights</button>
-        <button class="nav-btn" onclick="toggleDarkMode()" id="darkModeBtn">🌙 Dark mode</button>
       </div>
     </div>
     <div class="today" id="todayLabel"></div>
@@ -1056,6 +1127,27 @@
     <div class="trend-chart" id="trendChart"></div>
     <p class="heatmap-hint" id="trendHint" style="margin-top:14px;"></p>
   </div>
+
+  <div id="archivedView" style="display:none;">
+    <div class="detail-header">
+      <button class="back-btn" onclick="dismissTop()">← Back</button>
+      <h2>Archived habits</h2>
+    </div>
+    <div id="archivedList"></div>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="if(event.target===this) dismissTop()">
+  <div class="sidebar-panel">
+    <h2 style="font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0 0 18px;">Menu</h2>
+    <button class="sidebar-item" onclick="sidebarNavigate('openNotesView')">📝 Notes</button>
+    <button class="sidebar-item" onclick="sidebarNavigate('openBackupView')">💾 Backup</button>
+    <button class="sidebar-item" onclick="sidebarNavigate('openPushView')">🔔 Push setup</button>
+    <button class="sidebar-item" onclick="sidebarNavigate('openArchivedView')">🗄 Archived habits</button>
+    <hr style="border:none;border-top:1px solid var(--line);margin:10px 0;">
+    <button class="sidebar-item" onclick="toggleDarkMode()" id="darkModeBtn">🌙 Dark mode</button>
+  </div>
 </div>
 
 <!-- Add / Edit sheet -->
@@ -1065,6 +1157,32 @@
 
     <label>Name</label>
     <input type="text" id="habitName" placeholder="e.g. Stretch, Read, No sugar" maxlength="40">
+
+    <label>Icon <span style="font-weight:400;text-transform:none;color:var(--ink-soft);">(optional)</span></label>
+    <div class="emoji-picker" id="emojiPicker" onclick="handleEmojiPickerClick(event)">
+      <button type="button" class="emoji-chip none" data-emoji="">None</button>
+      <button type="button" class="emoji-chip" data-emoji="🧘">🧘</button>
+      <button type="button" class="emoji-chip" data-emoji="💪">💪</button>
+      <button type="button" class="emoji-chip" data-emoji="📖">📖</button>
+      <button type="button" class="emoji-chip" data-emoji="✍️">✍️</button>
+      <button type="button" class="emoji-chip" data-emoji="💧">💧</button>
+      <button type="button" class="emoji-chip" data-emoji="🥗">🥗</button>
+      <button type="button" class="emoji-chip" data-emoji="😴">😴</button>
+      <button type="button" class="emoji-chip" data-emoji="🏃">🏃</button>
+      <button type="button" class="emoji-chip" data-emoji="🚶">🚶</button>
+      <button type="button" class="emoji-chip" data-emoji="🎯">🎯</button>
+      <button type="button" class="emoji-chip" data-emoji="🎨">🎨</button>
+      <button type="button" class="emoji-chip" data-emoji="🎵">🎵</button>
+      <button type="button" class="emoji-chip" data-emoji="🧹">🧹</button>
+      <button type="button" class="emoji-chip" data-emoji="💰">💰</button>
+      <button type="button" class="emoji-chip" data-emoji="🙏">🙏</button>
+      <button type="button" class="emoji-chip" data-emoji="🌱">🌱</button>
+      <button type="button" class="emoji-chip" data-emoji="☀️">☀️</button>
+      <button type="button" class="emoji-chip" data-emoji="🌙">🌙</button>
+      <button type="button" class="emoji-chip" data-emoji="🧠">🧠</button>
+      <button type="button" class="emoji-chip" data-emoji="🚴">🚴</button>
+      <button type="button" class="emoji-chip" data-emoji="❤️">❤️</button>
+    </div>
 
     <label>Frequency</label>
     <div class="freq-toggle">
@@ -1156,6 +1274,7 @@ let habits = [];
 let editingId = null;
 let currentFreq = 'daily';
 let currentSelectedDays = new Set([0, 2, 4]);
+let currentEmoji = '';
 let reminderOn = false;
 let deleteTargetId = null;
 let openMenuId = null;
@@ -1190,6 +1309,24 @@ window.addEventListener('popstate', () => {
   const closeFn = backStack.pop();
   closeFn();
 });
+
+// ---- Sidebar ----
+function openSidebar() {
+  openMenuId = null;
+  document.getElementById('sidebarOverlay').classList.add('open');
+  pushBackState(closeSidebar);
+  bringToFront('sidebarOverlay');
+}
+function closeSidebar() {
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+function sidebarNavigate(openFnName) {
+  dismissTop(); // closes the sidebar first
+  setTimeout(() => {
+    if (typeof window[openFnName] === 'function') window[openFnName]();
+  }, 80);
+}
+
 let notesWeekOffset = 0;
 let selectedDayDate = null;
 let dayViewFromCalendar = false;
@@ -1224,6 +1361,8 @@ function load() {
       if (typeof h.tinyVersion !== 'string') h.tinyVersion = '';
       if (!Array.isArray(h.tinyCheckins)) h.tinyCheckins = [];
       if (typeof h.reviewSnoozedUntil !== 'string') h.reviewSnoozedUntil = null;
+      if (typeof h.archived !== 'boolean') h.archived = false;
+      if (typeof h.emoji !== 'string') h.emoji = '';
       // migrate from the previous {date, note} object format
       if (h.checkins.length && typeof h.checkins[0] === 'object') {
         const dates = [];
@@ -1262,6 +1401,7 @@ function refreshAll() {
   if (activeView === 'day') renderDayView();
   if (activeView === 'search') renderSearchResults();
   if (activeView === 'insights') renderInsights();
+  if (activeView === 'archived') renderArchivedList();
   if (document.getElementById('reviewOverlay').classList.contains('open')) renderReviewList();
   syncReminders().catch(() => { /* silent — Push setup view will show errors if the user checks there */ });
 }
@@ -1354,7 +1494,8 @@ function render() {
   const fab = document.getElementById('fabBtn');
   checkKaizenBanner();
 
-  if (habits.length === 0) {
+  const activeHabits = habits.filter(h => !h.archived);
+  if (activeHabits.length === 0) {
     empty.style.display = 'block';
     fab.style.display = 'none';
     list.innerHTML = '';
@@ -1365,7 +1506,7 @@ function render() {
 
   const today = todayStr();
   const thisWeekStart = getWeekStart(today);
-  list.innerHTML = habits.map(h => {
+  list.innerHTML = activeHabits.map(h => {
     const stats = getStats(h);
     const checkSet = new Set(h.checkins);
     const frozenSet = new Set(h.freezes || []);
@@ -1416,7 +1557,7 @@ function render() {
       <div class="card" onclick="handleCardClick(event,'${h.id}')" style="cursor:pointer;">
         <div class="card-top">
           <div>
-            <p class="habit-name">${escapeHtml(h.name)}</p>
+            <p class="habit-name">${h.emoji ? h.emoji + ' ' : ''}${escapeHtml(h.name)}</p>
             <p class="habit-meta">${freqLabel}</p>
           </div>
           <div style="display:flex;align-items:center;gap:6px;">
@@ -1426,6 +1567,7 @@ function render() {
         </div>
         <div class="kebab-menu ${openMenuId === h.id ? 'open' : ''}" id="menu-${h.id}">
           <button onclick="openEditSheet('${h.id}')">Edit</button>
+          <button onclick="archiveHabit('${h.id}')">🗄 Archive</button>
           <button class="danger" onclick="openDeleteOverlay('${h.id}')">Delete</button>
         </div>
         <div class="week-row">${dayBoxes}</div>
@@ -1540,6 +1682,7 @@ function openAddSheet() {
   document.getElementById('sheetTitle').textContent = 'New habit';
   document.getElementById('habitName').value = '';
   document.getElementById('tinyVersionInput').value = '';
+  selectEmoji('');
   currentSelectedDays = new Set([0, 2, 4]);
   setFreq('daily');
   document.getElementById('reminderTime').value = '09:00';
@@ -1556,6 +1699,7 @@ function openEditSheet(id) {
   document.getElementById('sheetTitle').textContent = 'Edit habit';
   document.getElementById('habitName').value = h.name;
   document.getElementById('tinyVersionInput').value = h.tinyVersion || '';
+  selectEmoji(h.emoji || '');
   currentSelectedDays = new Set(
     Array.isArray(h.selectedDays) && h.selectedDays.length ? h.selectedDays : distributeDays(h.timesPerWeek || 3)
   );
@@ -1595,6 +1739,17 @@ function toggleDayChip(day) {
   }
   renderDaysPicker();
 }
+function handleEmojiPickerClick(event) {
+  const chip = event.target.closest('.emoji-chip');
+  if (!chip) return;
+  selectEmoji(chip.dataset.emoji || '');
+}
+function selectEmoji(emoji) {
+  currentEmoji = emoji;
+  document.querySelectorAll('#emojiPicker .emoji-chip').forEach(chip => {
+    chip.classList.toggle('active', (chip.dataset.emoji || '') === emoji);
+  });
+}
 function toggleReminder() {
   reminderOn = !reminderOn;
   document.getElementById('reminderSwitch').classList.toggle('on', reminderOn);
@@ -1612,6 +1767,7 @@ function saveHabit() {
   if (editingId) {
     const h = habits.find(x => x.id === editingId);
     h.name = name;
+    h.emoji = currentEmoji;
     h.tinyVersion = tinyVersion;
     h.frequencyType = currentFreq;
     h.timesPerWeek = currentFreq === 'weekly' ? selectedDays.length : null;
@@ -1622,6 +1778,7 @@ function saveHabit() {
     habits.push({
       id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
       name,
+      emoji: currentEmoji,
       tinyVersion,
       frequencyType: currentFreq,
       timesPerWeek: currentFreq === 'weekly' ? selectedDays.length : null,
@@ -1646,7 +1803,7 @@ function saveHabit() {
 function openDeleteOverlay(id) {
   deleteTargetId = id;
   const h = habits.find(x => x.id === id);
-  document.getElementById('deleteHabitName').textContent = h ? h.name : '';
+  document.getElementById('deleteHabitName').textContent = h ? (h.emoji ? h.emoji + ' ' : '') + h.name : '';
   openMenuId = null;
   document.getElementById('deleteOverlay').classList.add('open');
   pushBackState(closeDeleteOverlay);
@@ -1661,6 +1818,52 @@ function confirmDelete() {
   save();
   dismissTop();
   refreshAll();
+}
+
+// ---- Archive (pause a habit without losing its history) ----
+function archiveHabit(id) {
+  const h = habits.find(x => x.id === id);
+  if (!h) return;
+  h.archived = true;
+  openMenuId = null;
+  save();
+  refreshAll();
+}
+function unarchiveHabit(id) {
+  const h = habits.find(x => x.id === id);
+  if (!h) return;
+  h.archived = false;
+  save();
+  refreshAll();
+  renderArchivedList();
+}
+function openArchivedView() {
+  activeView = 'archived';
+  openMenuId = null;
+  document.getElementById('mainView').style.display = 'none';
+  document.getElementById('archivedView').style.display = 'block';
+  renderArchivedList();
+  window.scrollTo(0, 0);
+  pushBackState(closeSubView);
+}
+function renderArchivedList() {
+  const container = document.getElementById('archivedList');
+  if (!container) return;
+  const archived = habits.filter(h => h.archived);
+  if (archived.length === 0) {
+    container.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;text-align:center;margin-top:40px;">No archived habits. Archiving pauses a habit without deleting its history.</p>`;
+    return;
+  }
+  container.innerHTML = archived.map(h => `
+    <div class="card">
+      <p class="habit-name">${h.emoji ? h.emoji + ' ' : ''}${escapeHtml(h.name)}</p>
+      <p class="habit-meta">Archived · ${h.checkins.length} total check-in${h.checkins.length===1?'':'s'}</p>
+      <div class="review-actions" style="margin-top:14px;">
+        <button class="primary" onclick="unarchiveHabit('${h.id}')">↩ Unarchive</button>
+        <button class="danger" onclick="openDeleteOverlay('${h.id}')">Delete permanently</button>
+      </div>
+    </div>
+  `).join('');
 }
 
 // ---- Day view (tap a calendar date to see/edit every habit's entry for that day) ----
@@ -1697,7 +1900,7 @@ function renderDayView() {
     container.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;text-align:center;margin-top:40px;">Add a habit first to start tracking days.</p>`;
     return;
   }
-  container.innerHTML = habits.map(h => {
+  container.innerHTML = habits.filter(h => !h.archived).map(h => {
     const done = h.checkins.includes(d);
     const frozen = !done && (h.freezes || []).includes(d);
     const tiny = done && (h.tinyCheckins || []).includes(d);
@@ -1710,7 +1913,7 @@ function renderDayView() {
       <div class="card" style="cursor:pointer;" onclick="openDayNote('${h.id}','${d}')">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
           <div>
-            <p class="habit-name">${escapeHtml(h.name)}</p>
+            <p class="habit-name">${h.emoji ? h.emoji + ' ' : ''}${escapeHtml(h.name)}</p>
             <p class="habit-meta">${freqLabel} · ${statusLabel}</p>
           </div>
           <div class="note-icon ${note?'filled':''}" style="flex:none;width:40px;height:40px;">${note?'✎':''}</div>
@@ -1768,7 +1971,7 @@ function searchNotes(query) {
     Object.keys(h.notes || {}).forEach(date => {
       const text = h.notes[date];
       if (text && text.toLowerCase().includes(q)) {
-        results.push({ habitId: h.id, habitName: h.name, date, text });
+        results.push({ habitId: h.id, habitName: (h.emoji ? h.emoji + ' ' : '') + h.name, date, text });
       }
     });
   });
@@ -1823,6 +2026,7 @@ function closeSubView() {
   document.getElementById('dayView').style.display = 'none';
   document.getElementById('searchView').style.display = 'none';
   document.getElementById('insightsView').style.display = 'none';
+  document.getElementById('archivedView').style.display = 'none';
   document.getElementById('mainView').style.display = 'block';
   render();
 }
@@ -1843,7 +2047,8 @@ function renderMonthGrid() {
 }
 function buildMonthGrid(year, month) {
   const today = todayStr();
-  const total = habits.length;
+  const activeHabits = habits.filter(h => !h.archived);
+  const total = activeHabits.length;
   const firstOfMonth = new Date(year, month, 1);
   const leadingBlanks = (firstOfMonth.getDay() + 6) % 7; // Monday-first
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1864,7 +2069,7 @@ function buildMonthGrid(year, month) {
     }
     let level = 0;
     if (total > 0) {
-      const doneCount = habits.filter(h => h.checkins.includes(date)).length;
+      const doneCount = activeHabits.filter(h => h.checkins.includes(date)).length;
       const ratio = doneCount / total;
       level = ratio === 0 ? 0 : ratio < 0.34 ? 1 : ratio < 0.67 ? 2 : ratio < 1 ? 3 : 4;
     }
@@ -1908,7 +2113,7 @@ function renderNotesList() {
     container.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;text-align:center;margin-top:40px;">Add a habit first, then come back here to jot notes on any day.</p>`;
     return;
   }
-  container.innerHTML = habits.map(h => {
+  container.innerHTML = habits.filter(h => !h.archived).map(h => {
     let iconsHtml = '';
     dates.forEach(d => {
       const dObj = new Date(d + 'T00:00:00');
@@ -1925,7 +2130,7 @@ function renderNotesList() {
       : (Array.isArray(h.selectedDays) && h.selectedDays.length ? h.selectedDays.map(x => WEEKDAY_LABELS[x]).join(', ') : `${h.timesPerWeek}× per week`);
     return `
       <div class="card" id="notes-card-${h.id}">
-        <p class="habit-name">${escapeHtml(h.name)}</p>
+        <p class="habit-name">${h.emoji ? h.emoji + ' ' : ''}${escapeHtml(h.name)}</p>
         <p class="habit-meta">${freqLabel}</p>
         <div class="week-row" style="margin-top:14px;">${iconsHtml}</div>
       </div>
@@ -2053,7 +2258,7 @@ async function syncReminders() {
   const payload = {
     topic: cfg.topic,
     timezone,
-    habits: habits.filter(h => h.reminderOn && h.reminderTime).map(h => {
+    habits: habits.filter(h => !h.archived && h.reminderOn && h.reminderTime).map(h => {
       const [hh, mm] = h.reminderTime.split(':').map(Number);
       return {
         id: h.id,
@@ -2062,6 +2267,8 @@ async function syncReminders() {
         reminderHour: hh,
         reminderMinute: mm,
         doneToday: h.checkins.includes(today) || (h.freezes || []).includes(today),
+        frequencyType: h.frequencyType,
+        selectedDays: Array.isArray(h.selectedDays) ? h.selectedDays : null,
       };
     }),
   };
@@ -2099,7 +2306,7 @@ function openDayNote(habitId, dateStr) {
   noteEditFrozen = (h.freezes || []).includes(dateStr);
   noteEditTiny = (h.tinyCheckins || []).includes(dateStr);
   const label = new Date(dateStr + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
-  document.getElementById('noteDateLabel').textContent = `${label} · ${h.name}`;
+  document.getElementById('noteDateLabel').textContent = `${label} · ${h.emoji ? h.emoji + ' ' : ''}${h.name}`;
   document.getElementById('noteDoneSwitch').classList.toggle('on', noteEditDone);
   document.getElementById('noteFrozenSwitch').classList.toggle('on', noteEditFrozen);
   const hasTiny = !!(h.tinyVersion && h.tinyVersion.trim());
@@ -2219,13 +2426,20 @@ function showAppNotification(title, body) {
     try { new Notification(title, { body, icon: 'icon-192.png' }); } catch (e) { /* ignore */ }
   }
 }
+function isScheduledOn(habit, dateStr) {
+  if (habit.frequencyType !== 'weekly') return true;
+  if (!Array.isArray(habit.selectedDays) || !habit.selectedDays.length) return true; // legacy weekly habits with no specific days
+  const weekdayIdx = (new Date(dateStr + 'T00:00:00').getDay() + 6) % 7; // Monday=0..Sunday=6
+  return habit.selectedDays.includes(weekdayIdx);
+}
 function scheduleReminders() {
   reminderTimeouts.forEach(t => clearTimeout(t));
   reminderTimeouts = [];
   if (!('Notification' in window)) return;
   const today = todayStr();
   habits.forEach(h => {
-    if (!h.reminderOn || !h.reminderTime) return;
+    if (h.archived || !h.reminderOn || !h.reminderTime) return;
+    if (!isScheduledOn(h, today)) return;
     if (h.checkins.includes(today) || (h.freezes || []).includes(today)) return;
     const [hh, mm] = h.reminderTime.split(':').map(Number);
     const now = new Date();
@@ -2245,7 +2459,9 @@ function checkOverdueBanner() {
   const today = todayStr();
   const now = new Date();
   const overdue = habits.filter(h => {
+    if (h.archived) return false;
     if (!h.reminderOn || h.checkins.includes(today) || (h.freezes || []).includes(today)) return false;
+    if (!isScheduledOn(h, today)) return false;
     const [hh, mm] = h.reminderTime.split(':').map(Number);
     const target = new Date();
     target.setHours(hh, mm, 0, 0);
@@ -2270,6 +2486,7 @@ function getHabitsNeedingReview() {
   const today = todayStr();
   const results = [];
   habits.forEach(h => {
+    if (h.archived) return;
     if (h.reviewSnoozedUntil && h.reviewSnoozedUntil > today) return;
     const createdDateStr = todayStr(new Date(h.createdAt));
     const daysSinceCreated = Math.round((new Date(today + 'T00:00:00') - new Date(createdDateStr + 'T00:00:00')) / 86400000);
@@ -2339,7 +2556,7 @@ function renderReviewList() {
   }
   container.innerHTML = flagged.map(({ habit, statText }) => `
     <div class="review-card">
-      <p class="habit-name">${escapeHtml(habit.name)}</p>
+      <p class="habit-name">${habit.emoji ? habit.emoji + ' ' : ''}${escapeHtml(habit.name)}</p>
       <p class="review-stat">${statText}</p>
       <div class="review-actions">
         <button class="primary" onclick="reviewShrinkIt('${habit.id}')">🌱 Shrink it</button>
@@ -2428,8 +2645,9 @@ function openInsightsView() {
   openMenuId = null;
   document.getElementById('mainView').style.display = 'none';
   document.getElementById('insightsView').style.display = 'block';
-  if (!insightsSelectedHabitId || !habits.find(h => h.id === insightsSelectedHabitId)) {
-    insightsSelectedHabitId = habits.length ? habits[0].id : null;
+  if (!insightsSelectedHabitId || !habits.find(h => h.id === insightsSelectedHabitId && !h.archived)) {
+    const active = habits.filter(h => !h.archived);
+    insightsSelectedHabitId = active.length ? active[0].id : null;
   }
   renderInsights();
   window.scrollTo(0, 0);
@@ -2446,13 +2664,14 @@ function renderInsightsRanking() {
     container.innerHTML = `<p style="color:var(--ink-soft);font-size:13px;">Add a habit to start seeing insights.</p>`;
     return;
   }
-  const ranked = habits.map(h => ({ habit: h, rate: getCompletionRate(h, 30) }))
+  const activeHabits = habits.filter(h => !h.archived);
+  const ranked = activeHabits.map(h => ({ habit: h, rate: getCompletionRate(h, 30) }))
     .sort((a, b) => b.rate - a.rate);
   container.innerHTML = ranked.map(({ habit, rate }) => {
     const pct = Math.round(rate * 100);
     return `
       <div class="ranking-row">
-        <span class="ranking-name">${escapeHtml(habit.name)}</span>
+        <span class="ranking-name">${habit.emoji ? habit.emoji + ' ' : ''}${escapeHtml(habit.name)}</span>
         <div class="ranking-bar-track"><div class="ranking-bar-fill" style="width:${pct}%;"></div></div>
         <span class="ranking-pct">${pct}%</span>
       </div>
@@ -2461,9 +2680,10 @@ function renderInsightsRanking() {
 }
 function renderInsightsHabitPicker() {
   const container = document.getElementById('insightsHabitPicker');
-  if (habits.length === 0) { container.innerHTML = ''; return; }
-  container.innerHTML = habits.map(h => `
-    <button class="habit-pill ${h.id === insightsSelectedHabitId ? 'active' : ''}" onclick="selectInsightsHabit('${h.id}')">${escapeHtml(h.name)}</button>
+  const activeHabits = habits.filter(h => !h.archived);
+  if (activeHabits.length === 0) { container.innerHTML = ''; return; }
+  container.innerHTML = activeHabits.map(h => `
+    <button class="habit-pill ${h.id === insightsSelectedHabitId ? 'active' : ''}" onclick="selectInsightsHabit('${h.id}')">${h.emoji ? h.emoji + ' ' : ''}${escapeHtml(h.name)}</button>
   `).join('');
 }
 function selectInsightsHabit(habitId) {
